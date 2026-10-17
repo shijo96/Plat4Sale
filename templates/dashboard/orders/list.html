@@ -1,0 +1,135 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Customer Orders Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Customer Orders</h2>
+      <span class="text-muted small">Monitor, update status, and manage deliveries.</span>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="bg-white p-3 rounded-4 border shadow-sm mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control border-start-0" placeholder="Search by Order ID, Customer name or phone..." value="{{ q }}" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Order Statuses</option>
+          {% for val, label in status_choices %}
+          <option value="{{ val }}" {% if selected_status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select name="payment_status" class="form-select form-select-sm">
+          <option value="">All Payments</option>
+          <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>Unpaid (COD)</option>
+          <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold">Filter</button>
+        <a href="{% url 'dashboard:order_list' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-white rounded-4 border shadow-sm overflow-hidden mb-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small">
+          <tr>
+            <th>Order Number</th>
+            <th>Customer</th>
+            <th>Contact Phone</th>
+            <th>Date & Time</th>
+            <th>Total Amount</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th class="text-end">Manage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in page_obj %}
+          <tr>
+            <td><strong>#{{ order.order_number }}</strong></td>
+            <td>
+              <div class="fw-bold text-dark">{{ order.customer_name }}</div>
+              {% if order.user %}<span class="text-muted small">@{{ order.user.username }}</span>{% endif %}
+            </td>
+            <td>
+              <a href="https://wa.me/{{ order.customer_phone }}" target="_blank" class="text-decoration-none text-dark small">
+                <i class="bi bi-whatsapp text-success me-1"></i> {{ order.customer_phone }}
+              </a>
+            </td>
+            <td class="text-muted small">{{ order.created_at|date:"d M Y, h:i A" }}</td>
+            <td><strong class="text-dark">₹{{ order.total_amount }}</strong></td>
+            <td>
+              <span class="badge {% if order.payment_status == 'paid' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ order.get_payment_status_display }}
+              </span>
+              <div class="text-muted" style="font-size:0.7rem;">{{ order.get_payment_method_display }}</div>
+            </td>
+            <td>
+              {% if order.status == 'pending' %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% elif order.status == 'confirmed' %}
+                <span class="badge bg-info text-dark">Confirmed</span>
+              {% elif order.status == 'processing' %}
+                <span class="badge bg-primary">Processing</span>
+              {% elif order.status == 'shipped' %}
+                <span class="badge text-white" style="background-color: #6366f1;">Shipped</span>
+              {% elif order.status == 'delivered' %}
+                <span class="badge bg-success">Delivered</span>
+              {% elif order.status == 'cancelled' %}
+                <span class="badge bg-danger">Cancelled</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'dashboard:order_detail' order.id %}" class="btn btn-sm btn-dark">
+                View & Update
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-4 text-muted">No orders found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="p-3 border-top d-flex justify-content-center">
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Previous</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">Next</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <h1 class="h3 fw-bold mb-4">
+    <i class="bi bi-shield-lock-fill text-warning me-2"></i> Secure Checkout
+  </h1>
+
+  <form method="POST" action="{% url 'orders:checkout' %}" id="checkout-form">
+    {% csrf_token %}
+
+    <div class="row g-4">
+
+      <!-- Left Column: Address Selection & Payment -->
+      <div class="col-lg-8">
+
+        <!-- STEP 1: Delivery Address -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-warning text-dark fs-6 rounded-pill">1</span>
+            <h2 class="h5 fw-bold mb-0">Select Delivery Address</h2>
+          </div>
+
+          {% if addresses %}
+          <div class="row g-3 mb-3">
+            {% for addr in addresses %}
+            <div class="col-md-6">
+              <label class="p-3 border rounded-3 d-block position-relative address-radio-card h-100 cursor-pointer" style="cursor: pointer;">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="address_id"
+                    value="{{ addr.id }}"
+                    id="addr_{{ addr.id }}"
+                    {% if addr.is_default or forloop.first %}checked{% endif %}
+                    onchange="toggleNewAddressForm(false)"
+                  />
+                  <div class="form-check-label ms-1">
+                    <strong class="d-block text-dark">{{ addr.full_name }}</strong>
+                    <div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ addr.phone }}</div>
+                    <div class="small text-secondary mt-1">
+                      {{ addr.address_line1 }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br />
+                      {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+                    </div>
+                    {% if addr.is_default %}
+                    <span class="badge bg-success-subtle text-success small mt-2">Default Address</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </label>
+            </div>
+            {% endfor %}
+
+            <!-- Option to enter a new address -->
+            <div class="col-12">
+              <div class="form-check p-3 border rounded-3 bg-light">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="address_id"
+                  value="new"
+                  id="addr_new"
+                  onchange="toggleNewAddressForm(true)"
+                />
+                <label class="form-check-label fw-bold small text-dark ms-1 cursor-pointer" for="addr_new" style="cursor: pointer;">
+                  + Deliver to a Different Address
+                </label>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- New Address Form (Visible by default if no saved addresses, otherwise hidden until selected) -->
+          <div id="new-address-fields" class="p-3 bg-light rounded-3 border mt-3" {% if addresses %}style="display: none;"{% endif %}>
+            <h6 class="fw-bold mb-3 text-dark">Enter Delivery Address Details:</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Full Name *</label>
+                <input type="text" name="full_name" class="form-control" placeholder="Recipient full name" {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">10-Digit Mobile Phone *</label>
+                <input type="text" name="phone" class="form-control" placeholder="Mobile phone for delivery" {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-bold">Flat, House no., Building, Apartment *</label>
+                <input type="text" name="address_line1" class="form-control" placeholder="House / Flat / Building No." {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Area, Street, Sector</label>
+                <input type="text" name="address_line2" class="form-control" placeholder="Street / Sector / Locality" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small fw-bold">Landmark (Optional)</label>
+                <input type="text" name="landmark" class="form-control" placeholder="E.g. Near Metro / Hospital" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">City / Town *</label>
+                <input type="text" name="city" class="form-control" placeholder="City" {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">State *</label>
+                <input type="text" name="state" class="form-control" placeholder="State (e.g. Kerala)" {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold">PIN Code *</label>
+                <input type="text" name="pincode" class="form-control" placeholder="6-digit PIN" {% if not addresses %}required{% endif %} />
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="save_address" value="1" id="saveAddrCheck" checked />
+                  <label class="form-check-label small" for="saveAddrCheck">Save this address to my account for future orders</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- STEP 2: Payment Method -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge bg-warning text-dark fs-6 rounded-pill">2</span>
+            <h2 class="h5 fw-bold mb-0">Select Payment Method</h2>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="p-3 border rounded-3 d-block h-100 bg-light" style="cursor: pointer;">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="payment_method" value="cod" id="pay_cod" checked />
+                  <div class="form-check-label ms-1">
+                    <div class="fw-bold text-dark"><i class="bi bi-cash-stack text-success me-1"></i> Cash on Delivery (COD)</div>
+                    <div class="small text-muted mt-1">Pay with cash or UPI scanner when the parcel arrives at your doorstep.</div>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div class="col-md-6">
+              <label class="p-3 border rounded-3 d-block h-100" style="cursor: pointer;">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="payment_method" value="upi" id="pay_upi" />
+                  <div class="form-check-label ms-1">
+                    <div class="fw-bold text-dark"><i class="bi bi-qr-code-scan text-primary me-1"></i> Pay via UPI / WhatsApp</div>
+                    <div class="small text-muted mt-1">Pay via Google Pay, PhonePe, Paytm, or scan QR code via WhatsApp chat.</div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional Order Notes -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
+          <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-chat-left-text me-1"></i> Special Delivery Instructions (Optional)</h6>
+          <textarea name="order_notes" rows="2" class="form-control" placeholder="Any landmark instructions, preferred delivery timing, or gate security code..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Order Items Summary & Confirm Button -->
+      <div class="col-lg-4">
+        <div class="bg-white p-4 rounded-4 border shadow-sm position-sticky" style="top: 90px;">
+          <h3 class="h5 fw-bold mb-3 pb-2 border-bottom">Order Recap</h3>
+
+          <!-- Items list -->
+          <div class="mb-3" style="max-height: 240px; overflow-y: auto;">
+            {% for item in cart_items %}
+            <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
+              {% if item.product.primary_image %}
+              <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
+              {% endif %}
+              <div class="flex-grow-1 small">
+                <div class="fw-bold text-truncate" style="max-width: 170px;">{{ item.product.name }}</div>
+                <div class="text-muted">Qty: {{ item.quantity }} × ₹{{ item.unit_price }}</div>
+              </div>
+              <span class="fw-bold small text-dark">₹{{ item.subtotal }}</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Totals -->
+          <div class="d-flex justify-content-between mb-2 small">
+            <span class="text-muted">Subtotal:</span>
+            <span class="fw-bold">₹{{ cart.subtotal }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-3 small">
+            <span class="text-muted">Shipping Fee:</span>
+            {% if cart.shipping_fee == 0 %}
+              <span class="badge bg-success-subtle text-success fw-bold">FREE</span>
+            {% else %}
+              <span class="fw-bold">₹{{ cart.shipping_fee }}</span>
+            {% endif %}
+          </div>
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between align-items-baseline mb-4">
+            <span class="h6 fw-bold mb-0">Total Payable:</span>
+            <span class="h3 fw-bold text-dark mb-0">₹{{ cart.total_amount }}</span>
+          </div>
+
+          <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3">
+            <i class="bi bi-check2-circle fs-5"></i> Confirm & Place Order
+          </button>
+
+          <div class="text-center small text-muted">
+            <i class="bi bi-whatsapp text-success me-1"></i>
+            After placing order, you can confirm directly on WhatsApp with 1-click.
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleNewAddressForm(show) {
+  const form = document.getElementById('new-address-fields');
+  const requiredInputs = form.querySelectorAll('input[type="text"]');
+  if (show) {
+    form.style.display = 'block';
+    requiredInputs.forEach(i => {
+      if (['full_name', 'phone', 'address_line1', 'city', 'state', 'pincode'].includes(i.name)) {
+        i.setAttribute('required', 'required');
+      }
+    });
+  } else {
+    form.style.display = 'none';
+    requiredInputs.forEach(i => i.removeAttribute('required'));
+  }
+}
+</script>
+{% endblock %}

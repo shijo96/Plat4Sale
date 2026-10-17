@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold mb-0">
+      <i class="bi bi-box-seam me-2 text-warning"></i> My Orders
+    </h1>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-dark btn-sm rounded-pill">
+      Shop More
+    </a>
+  </div>
+
+  {% if orders %}
+  <div class="d-flex flex-column gap-3">
+    {% for order in orders %}
+    <div class="bg-white rounded-4 border shadow-sm p-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom gap-2">
+        <div>
+          <span class="text-muted small text-uppercase">ORDER ID:</span>
+          <strong class="fs-6 text-dark ms-1">#{{ order.order_number }}</strong>
+          <span class="text-muted small ms-2">| Placed on {{ order.created_at|date:"d M Y, h:i A" }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if order.status == 'pending' %}
+            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i> Pending</span>
+          {% elif order.status == 'confirmed' %}
+            <span class="badge bg-info text-dark"><i class="bi bi-check-circle me-1"></i> Confirmed</span>
+          {% elif order.status == 'processing' %}
+            <span class="badge bg-primary"><i class="bi bi-box-seam me-1"></i> Processing</span>
+          {% elif order.status == 'shipped' %}
+            <span class="badge bg-indigo text-white" style="background-color: #6366f1;"><i class="bi bi-truck me-1"></i> Shipped</span>
+          {% elif order.status == 'delivered' %}
+            <span class="badge bg-success"><i class="bi bi-check2-all me-1"></i> Delivered</span>
+          {% elif order.status == 'cancelled' %}
+            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Cancelled</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row align-items-center g-3">
+        <!-- Items summary -->
+        <div class="col-md-7">
+          {% for item in order.items.all %}
+          <div class="d-flex align-items-center gap-2 mb-2">
+            {% if item.product and item.product.primary_image %}
+            <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product_name }}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
+            {% endif %}
+            <div class="small">
+              <span class="fw-bold text-dark">{{ item.product_name }}</span>
+              <span class="text-muted">× {{ item.quantity }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Financials & Actions -->
+        <div class="col-md-5 text-md-end">
+          <div class="mb-2">
+            <span class="text-muted small">Total: </span>
+            <strong class="fs-5 text-dark">₹{{ order.total_amount }}</strong>
+            <span class="badge bg-light text-muted border ms-1">{{ order.get_payment_method_display }}</span>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+            <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+              View Details & Tracking
+            </a>
+            {% if order.can_cancel %}
+            <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" onsubmit="return confirm('Are you sure you want to cancel Order #{{ order.order_number }}?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                Cancel
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white p-5 rounded-4 border text-center my-4 shadow-sm">
+    <div class="d-inline-flex p-4 rounded-circle bg-warning bg-opacity-10 text-warning fs-1 mb-3">
+      <i class="bi bi-box-seam"></i>
+    </div>
+    <h3 class="fw-bold mb-2">No Orders Placed Yet</h3>
+    <p class="text-muted mb-4">When you place orders on Plat4Sale, they will show up here along with live tracking and WhatsApp status.</p>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-plat-primary px-4 py-2">
+      <i class="bi bi-bag-fill me-1"></i> Start Shopping
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

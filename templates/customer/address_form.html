@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 650px;">
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4 p-md-5">
+
+      <h1 class="h4 fw-bold mb-4">
+        <i class="bi bi-geo-alt text-warning me-2"></i> {{ title }}
+      </h1>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Full Name *</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Mobile Phone *</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold small text-muted">Address Line 1 (Flat, House no., Building) *</label>
+            {{ form.address_line1 }}
+            {% if form.address_line1.errors %}<div class="text-danger small">{{ form.address_line1.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold small text-muted">Address Line 2 (Area, Street, Sector)</label>
+            {{ form.address_line2 }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Landmark (Optional)</label>
+            {{ form.landmark }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Town / City *</label>
+            {{ form.city }}
+            {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">State *</label>
+            {{ form.state }}
+            {% if form.state.errors %}<div class="text-danger small">{{ form.state.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Pincode *</label>
+            {{ form.pincode }}
+            {% if form.pincode.errors %}<div class="text-danger small">{{ form.pincode.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              {{ form.is_default }}
+              <label class="form-check-label small" for="{{ form.is_default.id_for_label }}">
+                Make this my default shipping address
+              </label>
+            </div>
+          </div>
+          <div class="col-12 mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-warning fw-bold px-4">
+              Save Address
+            </button>
+            <a href="{% url 'accounts:address_list' %}" class="btn btn-outline-secondary px-4">
+              Cancel
+            </a>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

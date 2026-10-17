@@ -1,0 +1,103 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Store & WhatsApp Configuration{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" style="max-width: 800px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Store Settings & WhatsApp Integration</h2>
+      <span class="text-muted small">Configure business details, ordering numbers, and delivery thresholds.</span>
+    </div>
+  </div>
+
+  <form method="POST" class="bg-white p-4 p-md-5 rounded-4 border shadow-sm">
+    {% csrf_token %}
+
+    <div class="p-4 rounded-4 mb-4 border" style="background-color: #F0FDF4; border-color: #86EFAC !important;">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-whatsapp text-success fs-3"></i>
+        <h5 class="fw-bold mb-0 text-success">WhatsApp Business Ordering Hotline</h5>
+      </div>
+      <p class="small text-secondary mb-3">
+        When customers confirm orders or click "Chat on WhatsApp", messages will be directed to this phone number.
+        Enter with country code (e.g. <code>919876543210</code> without spaces or +).
+      </p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-bold small text-muted">WhatsApp Number (e.g. 919876543210) *</label>
+          {{ form.whatsapp_number }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold small text-muted">Customer Support Phone Display *</label>
+          {{ form.support_phone }}
+        </div>
+      </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">Brand & Store Identity</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Store Name</label>
+        {{ form.store_name }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Tagline</label>
+        {{ form.tagline }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Support Email</label>
+        {{ form.support_email }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Currency Symbol</label>
+        {{ form.currency_symbol }}
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-bold small text-muted">Store Physical Hub / Billing Address</label>
+        {{ form.address }}
+      </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">Delivery Charges & Thresholds</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Minimum Amount for FREE Delivery (₹)</label>
+        {{ form.free_shipping_threshold }}
+        <div class="text-muted small mt-1">Orders at or above this amount get free shipping.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Standard Shipping Fee (₹)</label>
+        {{ form.standard_shipping_fee }}
+        <div class="text-muted small mt-1">Applied when cart total is below free delivery threshold.</div>
+      </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">Top Announcement Bar</h5>
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <label class="form-label fw-bold small text-muted">Announcement Ticker Text</label>
+        {{ form.announcement_text }}
+      </div>
+      <div class="col-12">
+        <div class="form-check">
+          {{ form.announcement_active }}
+          <label class="form-check-label small fw-bold" for="{{ form.announcement_active.id_for_label }}">
+            Display Announcement Bar on public website
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-3 border-top">
+      <button type="submit" class="btn btn-warning fw-bold px-4">
+        <i class="bi bi-check2-circle me-1"></i> Save Store Settings
+      </button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

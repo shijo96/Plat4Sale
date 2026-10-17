@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 540px;">
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+    <div class="card-header bg-dark text-white p-4 text-center" style="border-bottom: 3px solid var(--plat-yellow);">
+      <div class="d-inline-flex align-items-center justify-content-center p-2 rounded-3 bg-warning text-dark mb-2">
+        <img src="{% static 'images/logo.jpg' %}" alt="Plat4Sale Logo" style="height: 38px; border-radius: 6px;" />
+      </div>
+      <h1 class="h4 fw-bold mb-1">Create Your Plat4Sale Account</h1>
+      <p class="text-white-50 small mb-0">Join Plat4Sale for easy order tracking, saved addresses & exclusive offers.</p>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger small p-2 mb-3">
+        {% for error in form.non_field_errors %}
+          <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fw-bold small text-muted">First Name</label>
+            {{ form.first_name }}
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-bold small text-muted">Last Name</label>
+            {{ form.last_name }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">Username *</label>
+          {{ form.username }}
+          {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">Email Address *</label>
+          {{ form.email }}
+          {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">Mobile Phone Number</label>
+          {{ form.phone }}
+          {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">Password *</label>
+          {{ form.password }}
+          {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold small text-muted">Confirm Password *</label>
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}<div class="text-danger small mt-1">{{ form.confirm_password.errors.0 }}</div>{% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm mb-3">
+          <i class="bi bi-person-check-fill me-1"></i> Complete Registration
+        </button>
+
+        <div class="text-center small">
+          Already have an account?
+          <a href="{% url 'accounts:login' %}{% if next %}?next={{ next }}{% endif %}" class="fw-bold text-dark text-decoration-none">
+            Sign In here →
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

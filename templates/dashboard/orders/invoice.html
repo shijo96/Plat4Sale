@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice #{{ order.order_number }} — Plat4Sale</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; padding: 30px; }
+    .invoice-box { max-width: 800px; margin: auto; padding: 30px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
+    @media print {
+      body { padding: 0; }
+      .invoice-box { border: 0; box-shadow: none; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="invoice-box">
+
+  <div class="d-flex justify-content-between align-items-center pb-4 mb-4 border-bottom">
+    <div class="d-flex align-items-center gap-2">
+      <img src="{% static 'images/logo.jpg' %}" alt="Plat4Sale Logo" style="height: 50px; border-radius: 8px;" />
+      <div>
+        <h2 class="h4 fw-bold mb-0">Plat4Sale</h2>
+        <span class="small text-muted">FIND • SHOP • LOVE</span>
+      </div>
+    </div>
+    <div class="text-end">
+      <h3 class="h5 fw-bold mb-1 text-danger">TAX INVOICE</h3>
+      <div class="small"><strong>Invoice ID:</strong> #{{ order.order_number }}</div>
+      <div class="small text-muted">Date: {{ order.created_at|date:"d M Y" }}</div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-6">
+      <h6 class="fw-bold small text-muted text-uppercase">Sold By:</h6>
+      <strong class="d-block">{{ store.store_name }}</strong>
+      <div class="small text-secondary">{{ store.address }}</div>
+      <div class="small text-secondary">Phone: {{ store.support_phone }}</div>
+      <div class="small text-secondary">Email: {{ store.support_email }}</div>
+    </div>
+    <div class="col-6 text-end">
+      <h6 class="fw-bold small text-muted text-uppercase">Billed & Shipped To:</h6>
+      <strong class="d-block">{{ order.customer_name }}</strong>
+      <div class="small text-secondary">{{ order.full_shipping_address }}</div>
+      <div class="small text-secondary">Phone: {{ order.customer_phone }}</div>
+    </div>
+  </div>
+
+  <table class="table table-bordered small mb-4">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Description</th>
+        <th>SKU</th>
+        <th class="text-center">Qty</th>
+        <th class="text-end">Unit Price</th>
+        <th class="text-end">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td><strong>{{ item.product_name }}</strong></td>
+        <td>{{ item.product_sku|default:"-" }}</td>
+        <td class="text-center">{{ item.quantity }}</td>
+        <td class="text-end">₹{{ item.unit_price }}</td>
+        <td class="text-end">₹{{ item.subtotal }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td colspan="5" class="text-end fw-bold">Subtotal:</td>
+        <td class="text-end fw-bold">₹{{ order.subtotal }}</td>
+      </tr>
+      <tr>
+        <td colspan="5" class="text-end fw-bold">Shipping Fee:</td>
+        <td class="text-end fw-bold">{% if order.shipping_fee == 0 %}FREE{% else %}₹{{ order.shipping_fee }}{% endif %}</td>
+      </tr>
+      <tr class="table-light">
+        <td colspan="5" class="text-end fw-bold fs-6">Grand Total:</td>
+        <td class="text-end fw-bold fs-6">₹{{ order.total_amount }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="p-3 bg-light rounded small mb-4">
+    <div class="fw-bold">Payment Method: {{ order.get_payment_method_display }}</div>
+    <div class="text-muted">Payment Status: {{ order.get_payment_status_display }}</div>
+  </div>
+
+  <div class="text-center text-muted small pt-3 border-top">
+    Thank you for shopping at Plat4Sale! For assistance, contact {{ store.support_phone }} or {{ store.support_email }}.
+  </div>
+
+  <div class="text-center mt-4 no-print">
+    <button onclick="window.print()" class="btn btn-dark btn-sm px-4 fw-bold">
+      Print / Save PDF
+    </button>
+  </div>
+
+</div>
+
+</body>
+</html>

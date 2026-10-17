@@ -1,0 +1,101 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Customer Reviews Moderation{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Product Reviews ({{ page_obj.paginator.count }})</h2>
+      <span class="text-muted small">Moderate, approve, or hide customer reviews before display.</span>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-4 border shadow-sm overflow-hidden mb-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small">
+          <tr>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Rating</th>
+            <th>Review Headline & Comment</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in page_obj %}
+          <tr>
+            <td>
+              <a href="{{ r.product.get_absolute_url }}" target="_blank" class="fw-bold text-dark text-decoration-none">
+                {{ r.product.name }}
+              </a>
+            </td>
+            <td>
+              <div class="small fw-bold text-dark">{{ r.user.get_full_name|default:r.user.username }}</div>
+              <span class="text-muted" style="font-size:0.75rem;">@{{ r.user.username }}</span>
+            </td>
+            <td>
+              <span class="badge bg-warning text-dark fw-bold">{{ r.rating }} ★</span>
+            </td>
+            <td style="max-width: 320px;">
+              <strong class="d-block small text-dark">{{ r.title }}</strong>
+              <div class="text-secondary small text-truncate">{{ r.comment }}</div>
+            </td>
+            <td class="text-muted small">{{ r.created_at|date:"d M Y" }}</td>
+            <td>
+              {% if r.is_approved %}
+                <span class="badge bg-success-subtle text-success">Approved</span>
+              {% else %}
+                <span class="badge bg-secondary">Pending / Hidden</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                {% if not r.is_approved %}
+                <form method="POST" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="review_id" value="{{ r.id }}" />
+                  <input type="hidden" name="action" value="approve" />
+                  <button type="submit" class="btn btn-outline-success" title="Approve">
+                    <i class="bi bi-check-lg"></i> Approve
+                  </button>
+                </form>
+                {% else %}
+                <form method="POST" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="review_id" value="{{ r.id }}" />
+                  <input type="hidden" name="action" value="reject" />
+                  <button type="submit" class="btn btn-outline-secondary" title="Hide">
+                    <i class="bi bi-eye-slash"></i> Hide
+                  </button>
+                </form>
+                {% endif %}
+
+                <form method="POST" onsubmit="return confirm('Delete review permanently?');" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="review_id" value="{{ r.id }}" />
+                  <input type="hidden" name="action" value="delete" />
+                  <button type="submit" class="btn btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">No reviews found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

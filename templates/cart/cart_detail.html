@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart ({{ cart.total_items }} Items) — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <h1 class="h3 fw-bold mb-4">
+    <i class="bi bi-cart3 me-2 text-warning"></i> Shopping Cart
+    {% if cart.total_items > 0 %}
+      <span class="text-muted fs-6 fw-normal">({{ cart.total_items }} item{{ cart.total_items|pluralize }})</span>
+    {% endif %}
+  </h1>
+
+  {% if items %}
+  <div class="row g-4">
+
+    <!-- Left: Cart Items List -->
+    <div class="col-lg-8">
+
+      <!-- Free Shipping Tracker -->
+      <div class="p-3 bg-white rounded-3 border shadow-sm mb-3">
+        {% if amount_needed_for_free_shipping > 0 %}
+          <div class="d-flex align-items-center gap-2 mb-2 text-dark small fw-bold">
+            <i class="bi bi-truck text-warning fs-5"></i>
+            <span>Add <strong class="text-danger">₹{{ amount_needed_for_free_shipping }}</strong> more to get <strong>FREE Delivery</strong>!</span>
+          </div>
+          <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ free_shipping_progress }}%;"></div>
+          </div>
+        {% else %}
+          <div class="d-flex align-items-center gap-2 text-success small fw-bold">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <span>Congratulations! You qualify for <strong>FREE Delivery</strong> on this order.</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Item Cards -->
+      {% for item in items %}
+      <div class="cart-card" id="cart-item-row-{{ item.id }}">
+        <div class="d-flex gap-3 align-items-start">
+
+          <!-- Thumbnail -->
+          <a href="{{ item.product.get_absolute_url }}">
+            {% if item.product.primary_image %}
+              <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" class="cart-item-img" />
+            {% else %}
+              <img src="{% static 'images/logo.jpg' %}" alt="{{ item.product.name }}" class="cart-item-img" />
+            {% endif %}
+          </a>
+
+          <!-- Details -->
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <h2 class="h6 fw-bold mb-1">
+                <a href="{{ item.product.get_absolute_url }}" class="text-dark text-decoration-none">
+                  {{ item.product.name }}
+                </a>
+              </h2>
+              <span class="fw-bold fs-6 text-dark ms-2">₹{{ item.subtotal }}</span>
+            </div>
+
+            <div class="text-muted small mb-2">
+              Unit Price: <strong>₹{{ item.unit_price }}</strong>
+              {% if item.product.sale_price and item.product.sale_price < item.product.price %}
+                <span class="text-decoration-line-through ms-1 text-muted">₹{{ item.product.price }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Controls: Quantity Adjuster & Remove -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3 pt-2 border-top">
+              <div class="d-flex align-items-center gap-2">
+                <span class="small text-muted fw-bold">Qty:</span>
+                <div class="qty-counter">
+                  <form action="{% url 'cart:update_cart_item' item.id %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="decrease" />
+                    <button type="submit" class="qty-btn" aria-label="Decrease quantity">-</button>
+                  </form>
+                  <span class="qty-val">{{ item.quantity }}</span>
+                  <form action="{% url 'cart:update_cart_item' item.id %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="increase" />
+                    <button type="submit" class="qty-btn" aria-label="Increase quantity" {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Remove -->
+              <form action="{% url 'cart:remove_cart_item' item.id %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link text-danger text-decoration-none small p-0 fw-bold">
+                  <i class="bi bi-trash3 me-1"></i> Remove
+                </button>
+              </form>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+        </a>
+        <form action="{% url 'cart:clear_cart' %}" method="POST" onsubmit="return confirm('Are you sure you want to clear your cart?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+            <i class="bi bi-x-circle me-1"></i> Clear Cart
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Right: Order Summary Box -->
+    <div class="col-lg-4">
+      <div class="bg-white p-4 rounded-4 border shadow-sm position-sticky" style="top: 90px;">
+        <h3 class="h5 fw-bold mb-3 pb-2 border-bottom">Order Summary</h3>
+
+        <div class="d-flex justify-content-between mb-2 small">
+          <span class="text-muted">Subtotal ({{ cart.total_items }} item{{ cart.total_items|pluralize }}):</span>
+          <span class="fw-bold">₹{{ cart.subtotal }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between mb-3 small">
+          <span class="text-muted">Shipping Fee:</span>
+          {% if cart.shipping_fee == 0 %}
+            <span class="badge bg-success-subtle text-success fw-bold">FREE</span>
+          {% else %}
+            <span class="fw-bold">₹{{ cart.shipping_fee }}</span>
+          {% endif %}
+        </div>
+
+        <hr class="my-3">
+
+        <div class="d-flex justify-content-between align-items-baseline mb-4">
+          <span class="h6 fw-bold mb-0">Total Amount:</span>
+          <span class="h4 fw-bold text-dark mb-0">₹{{ cart.total_amount }}</span>
+        </div>
+
+        <a href="{% url 'orders:checkout' %}" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3">
+          <i class="bi bi-lock-fill"></i> Proceed to Checkout
+        </a>
+
+        <div class="p-3 bg-light rounded-3 text-center small text-muted">
+          <i class="bi bi-shield-lock-fill text-success fs-5 d-block mb-1"></i>
+          <div>Safe & Secure Ordering</div>
+          <div style="font-size:0.75rem;">Pay via Cash on Delivery (COD) or instant WhatsApp confirmation</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  {% else %}
+  <div class="bg-white p-5 rounded-4 border text-center my-4 shadow-sm">
+    <div class="d-inline-flex p-4 rounded-circle bg-warning bg-opacity-10 text-warning fs-1 mb-3">
+      <i class="bi bi-cart-x"></i>
+    </div>
+    <h3 class="fw-bold mb-2">Your Shopping Cart is Empty</h3>
+    <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet. Explore our latest deals and top products!</p>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-plat-primary px-4 py-2">
+      <i class="bi bi-bag-fill me-1"></i> Start Shopping Now
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

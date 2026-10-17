@@ -1,0 +1,82 @@
+{% load static %}
+<div class="product-card" id="product-card-{{ product.id }}">
+  <!-- Thumbnail & Badges -->
+  <div class="product-thumb-wrap">
+    {% if product.discount_percentage > 0 %}
+      <span class="discount-badge">{{ product.discount_percentage }}% OFF</span>
+    {% elif product.is_bestseller %}
+      <span class="bestseller-badge">BEST SELLER</span>
+    {% endif %}
+
+    <!-- Wishlist Button -->
+    <button
+      type="button"
+      class="wishlist-toggle-btn ajax-wishlist-toggle {% if product.id in user_wishlist_ids %}active{% endif %}"
+      data-product-id="{{ product.id }}"
+      aria-label="Save to Wishlist"
+      title="Save to Wishlist"
+    >
+      <i class="bi {% if product.id in user_wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+    </button>
+
+    <a href="{{ product.get_absolute_url }}">
+      {% if product.primary_image %}
+        <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" loading="lazy" />
+      {% else %}
+        <img src="{% static 'images/logo.jpg' %}" alt="{{ product.name }}" loading="lazy" />
+      {% endif %}
+    </a>
+  </div>
+
+  <!-- Body -->
+  <div class="product-body">
+    <a href="{{ product.category.get_absolute_url }}" class="product-category-link">
+      {{ product.category.name }}
+    </a>
+
+    <h3 class="h6 mb-1">
+      <a href="{{ product.get_absolute_url }}" class="product-title" title="{{ product.name }}">
+        {{ product.name }}
+      </a>
+    </h3>
+
+    <!-- Ratings -->
+    <div class="product-rating">
+      <i class="bi bi-star-fill"></i>
+      <span class="fw-bold text-dark">{{ product.average_rating }}</span>
+      <span class="product-rating-count">({{ product.review_count }})</span>
+    </div>
+
+    <!-- Pricing Row -->
+    <div class="product-price-row">
+      <span class="current-price">₹{{ product.current_price }}</span>
+      {% if product.sale_price and product.sale_price < product.price %}
+        <span class="original-price">₹{{ product.price }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Stock Status & Add to Cart -->
+    <div class="mt-auto">
+      {% if product.in_stock %}
+        {% if product.stock <= 5 %}
+          <div class="stock-status-pill stock-low">Only {{ product.stock }} left in stock!</div>
+        {% else %}
+          <div class="stock-status-pill stock-in">In Stock</div>
+        {% endif %}
+        <button
+          type="button"
+          class="btn-add-cart ajax-add-cart-btn"
+          data-product-id="{{ product.id }}"
+          id="add-cart-btn-{{ product.id }}"
+        >
+          <i class="bi bi-cart-plus"></i> Add to Cart
+        </button>
+      {% else %}
+        <div class="stock-status-pill stock-out">Out of Stock</div>
+        <button type="button" class="btn btn-secondary w-100 btn-sm disabled" disabled>
+          Out of Stock
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</div>

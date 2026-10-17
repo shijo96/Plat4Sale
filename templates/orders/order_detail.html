@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.order_number }} Details — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 900px;">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}" class="text-muted text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'orders:my_orders' %}" class="text-muted text-decoration-none">My Orders</a></li>
+      <li class="breadcrumb-item active" aria-current="page">#{{ order.order_number }}</li>
+    </ol>
+  </nav>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <h1 class="h4 fw-bold mb-1">Order #{{ order.order_number }}</h1>
+        <span class="text-muted small">Placed on {{ order.created_at|date:"d M Y, h:i A" }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        {% if order.status == 'pending' %}
+          <span class="badge bg-warning text-dark fs-6 px-3 py-2">Status: Pending</span>
+        {% elif order.status == 'confirmed' %}
+          <span class="badge bg-info text-dark fs-6 px-3 py-2">Status: Confirmed</span>
+        {% elif order.status == 'processing' %}
+          <span class="badge bg-primary fs-6 px-3 py-2">Status: Processing</span>
+        {% elif order.status == 'shipped' %}
+          <span class="badge text-white fs-6 px-3 py-2" style="background-color: #6366f1;">Status: Shipped</span>
+        {% elif order.status == 'delivered' %}
+          <span class="badge bg-success fs-6 px-3 py-2">Status: Delivered</span>
+        {% elif order.status == 'cancelled' %}
+          <span class="badge bg-danger fs-6 px-3 py-2">Status: Cancelled</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+
+      <!-- Order Tracking Roadmap -->
+      {% if order.status != 'cancelled' %}
+      <div class="mb-5">
+        <h5 class="h6 fw-bold text-uppercase text-muted mb-4 text-center">Live Shipment Status</h5>
+        <div class="order-tracker">
+          <div class="tracker-step {% if order.status in 'pending confirmed processing shipped delivered' %}completed{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-receipt"></i></div>
+            <span class="tracker-label">Placed</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'confirmed processing shipped delivered' %}completed{% elif order.status == 'pending' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-check2"></i></div>
+            <span class="tracker-label">Confirmed</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'processing shipped delivered' %}completed{% elif order.status == 'confirmed' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-box-seam"></i></div>
+            <span class="tracker-label">Processing</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'shipped delivered' %}completed{% elif order.status == 'processing' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-truck"></i></div>
+            <span class="tracker-label">Shipped</span>
+          </div>
+          <div class="tracker-step {% if order.status == 'delivered' %}completed{% elif order.status == 'shipped' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-house-door"></i></div>
+            <span class="tracker-label">Delivered</span>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-danger mb-4 d-flex align-items-center gap-2">
+        <i class="bi bi-x-circle-fill fs-4"></i>
+        <div>This order has been cancelled.</div>
+      </div>
+      {% endif %}
+
+      <!-- WhatsApp Help & Support Hotline -->
+      <div class="p-3 rounded-3 bg-light border d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+          <strong class="d-block small text-dark"><i class="bi bi-whatsapp text-success me-1"></i> Need help with this order?</strong>
+          <span class="text-muted small">Connect with our support executive on WhatsApp ({{ store.support_phone }})</span>
+        </div>
+        <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm fw-bold">
+          <i class="bi bi-whatsapp"></i> Chat on WhatsApp
+        </a>
+      </div>
+
+      <!-- Address & Info Grid -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="p-3 rounded-3 bg-white border h-100 shadow-sm">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-geo-alt text-warning me-1"></i> Delivery Address</h6>
+            <div class="fw-bold text-dark">{{ order.customer_name }}</div>
+            <div class="small text-muted mb-1"><i class="bi bi-telephone me-1"></i>{{ order.customer_phone }}</div>
+            <div class="small text-secondary">{{ order.full_shipping_address }}</div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="p-3 rounded-3 bg-white border h-100 shadow-sm">
+            <h6 class="fw-bold mb-2 text-dark"><i class="bi bi-credit-card text-warning me-1"></i> Payment Summary</h6>
+            <div class="small mb-1">
+              <span class="text-muted">Payment Mode:</span>
+              <strong class="text-dark">{{ order.get_payment_method_display }}</strong>
+            </div>
+            <div class="small mb-1">
+              <span class="text-muted">Payment Status:</span>
+              <span class="badge {% if order.payment_status == 'paid' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ order.get_payment_status_display }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Itemized Table -->
+      <h5 class="fw-bold mb-3">Order Items</h5>
+      <div class="table-responsive border rounded-3 mb-4">
+        <table class="table mb-0 align-middle">
+          <thead class="table-light small">
+            <tr>
+              <th>Product</th>
+              <th class="text-center">Price</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>
+                <div class="fw-bold text-dark">{{ item.product_name }}</div>
+                {% if item.product_sku %}
+                <div class="small text-muted">SKU: {{ item.product_sku }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center small">₹{{ item.unit_price }}</td>
+              <td class="text-center small">{{ item.quantity }}</td>
+              <td class="text-end fw-bold">₹{{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="table-light">
+              <td colspan="3" class="text-end text-muted small">Subtotal:</td>
+              <td class="text-end fw-bold">₹{{ order.subtotal }}</td>
+            </tr>
+            <tr class="table-light">
+              <td colspan="3" class="text-end text-muted small">Delivery:</td>
+              <td class="text-end fw-bold">
+                {% if order.shipping_fee == 0 %}FREE{% else %}₹{{ order.shipping_fee }}{% endif %}
+              </td>
+            </tr>
+            <tr class="table-light">
+              <td colspan="3" class="text-end fw-bold">Total:</td>
+              <td class="text-end fw-bold fs-5 text-dark">₹{{ order.total_amount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="{% url 'orders:my_orders' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+          ← Back to My Orders
+        </a>
+
+        {% if order.can_cancel %}
+        <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" onsubmit="return confirm('Cancel this order?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+            <i class="bi bi-x-circle me-1"></i> Cancel Order
+          </button>
+        </form>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

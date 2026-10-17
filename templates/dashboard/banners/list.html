@@ -1,0 +1,76 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Promotional Banners Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Promotional Banners</h2>
+      <span class="text-muted small">Manage hero slider slides and promotional banners on homepage.</span>
+    </div>
+    <a href="{% url 'dashboard:banner_add' %}" class="btn btn-warning fw-bold">
+      <i class="bi bi-plus-lg me-1"></i> Add Banner
+    </a>
+  </div>
+
+  <div class="bg-white rounded-4 border shadow-sm overflow-hidden mb-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small">
+          <tr>
+            <th style="width: 120px;">Image Preview</th>
+            <th>Title & Subtitle</th>
+            <th>Badge</th>
+            <th>Target URL</th>
+            <th>Placement</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in banners %}
+          <tr>
+            <td>
+              {% if b.image %}
+              <img src="{{ b.image.url }}" alt="{{ b.title }}" style="width: 100px; height: 50px; object-fit: cover; border-radius: 6px;" />
+              {% endif %}
+            </td>
+            <td>
+              <strong class="d-block text-dark">{{ b.title }}</strong>
+              <span class="text-muted small">{{ b.subtitle|truncatewords:8 }}</span>
+            </td>
+            <td>{% if b.badge_text %}<span class="badge bg-warning text-dark">{{ b.badge_text }}</span>{% else %}-{% endif %}</td>
+            <td><code class="small text-secondary">{{ b.button_url }}</code></td>
+            <td><span class="badge bg-light text-dark border">{{ b.get_placement_display }}</span></td>
+            <td>
+              {% if b.is_active %}<span class="badge bg-success-subtle text-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'dashboard:banner_edit' b.id %}" class="btn btn-outline-dark" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form action="{% url 'dashboard:banner_delete' b.id %}" method="POST" onsubmit="return confirm('Delete this banner?');" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">No banners created yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

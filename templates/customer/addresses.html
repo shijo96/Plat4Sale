@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Saved Addresses — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold mb-0">
+      <i class="bi bi-geo-alt text-warning me-2"></i> Saved Delivery Addresses
+    </h1>
+    <a href="{% url 'accounts:address_add' %}" class="btn btn-warning fw-bold btn-sm rounded-pill px-3">
+      <i class="bi bi-plus-lg me-1"></i> Add New Address
+    </a>
+  </div>
+
+  {% if addresses %}
+  <div class="row g-3">
+    {% for addr in addresses %}
+    <div class="col-md-6 col-lg-4">
+      <div class="bg-white p-4 rounded-4 border shadow-sm h-100 d-flex flex-column position-relative">
+        {% if addr.is_default %}
+        <span class="badge bg-success-subtle text-success position-absolute top-0 end-0 m-3">
+          <i class="bi bi-check-circle me-1"></i> Default
+        </span>
+        {% endif %}
+
+        <h2 class="h6 fw-bold text-dark mb-1">{{ addr.full_name }}</h2>
+        <div class="small text-muted mb-2"><i class="bi bi-telephone me-1"></i>{{ addr.phone }}</div>
+
+        <div class="small text-secondary mb-3 flex-grow-1">
+          {{ addr.address_line1 }}<br />
+          {% if addr.address_line2 %}{{ addr.address_line2 }}<br />{% endif %}
+          {% if addr.landmark %}Near {{ addr.landmark }}<br />{% endif %}
+          {{ addr.city }}, {{ addr.state }} - <strong>{{ addr.pincode }}</strong>
+        </div>
+
+        <div class="d-flex gap-2 pt-3 border-top">
+          <a href="{% url 'accounts:address_edit' addr.id %}" class="btn btn-outline-dark btn-sm flex-grow-1">
+            <i class="bi bi-pencil me-1"></i> Edit
+          </a>
+          {% if not addr.is_default %}
+          <form action="{% url 'accounts:address_set_default' addr.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Set Default">
+              Make Default
+            </button>
+          </form>
+          {% endif %}
+          <form action="{% url 'accounts:address_delete' addr.id %}" method="POST" onsubmit="return confirm('Delete address?');" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white p-5 rounded-4 border text-center my-4 shadow-sm">
+    <div class="d-inline-flex p-4 rounded-circle bg-warning bg-opacity-10 text-warning fs-1 mb-3">
+      <i class="bi bi-geo-alt"></i>
+    </div>
+    <h3 class="fw-bold mb-2">No Saved Addresses Found</h3>
+    <p class="text-muted mb-4">Save your delivery address for 1-click checkout and faster doorstep dispatch.</p>
+    <a href="{% url 'accounts:address_add' %}" class="btn btn-warning fw-bold px-4 py-2">
+      <i class="bi bi-plus-lg me-1"></i> Add Your First Address
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

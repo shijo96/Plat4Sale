@@ -1,0 +1,172 @@
+{% load static %}
+<!-- Top Announcement Bar -->
+{% if store.announcement_active and store.announcement_text %}
+<div class="announcement-bar">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <span class="badge bg-warning text-dark me-2 fw-bold">TOP ANNOUNCEMENT</span>
+      <span>{{ store.announcement_text }}</span>
+    </div>
+    <div class="d-none d-md-flex align-items-center gap-3">
+      <a href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale,%20I%20have%20an%20inquiry." target="_blank" rel="noopener">
+        <i class="bi bi-whatsapp me-1 text-success"></i> WhatsApp Support: {{ store.support_phone }}
+      </a>
+      {% if user.is_authenticated and user.is_staff %}
+      <a href="{% url 'dashboard:home' %}" class="badge bg-warning text-dark text-decoration-none">
+        <i class="bi bi-speedometer2"></i> Admin Panel
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Main Header Navbar -->
+<header class="main-navbar">
+  <div class="container">
+    <div class="row align-items-center g-2 g-md-3">
+
+      <!-- Logo & Brand -->
+      <div class="col-6 col-md-3 col-lg-3">
+        <a href="{% url 'catalog:home' %}" class="navbar-brand-wrap" id="brand-logo-link">
+          <img src="{% static 'images/logo.jpg' %}" alt="Plat4Sale Logo" class="navbar-brand-img" />
+          <div class="brand-text-block">
+            <span class="brand-text-title">Plat<span>4</span>Sale</span>
+            <span class="brand-text-tagline">FIND • SHOP • LOVE</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Search Input with Dropdown & Live Suggest -->
+      <div class="col-12 col-md-5 col-lg-5 order-3 order-md-2">
+        <div class="search-container">
+          <form action="{% url 'catalog:product_list' %}" method="GET" class="d-flex search-input-group">
+            <select name="category" class="search-category-select d-none d-lg-block">
+              <option value="">All Categories</option>
+              {% for cat in nav_categories %}
+              <option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+            <input
+              type="text"
+              name="q"
+              id="main-search-input"
+              class="form-control search-main-input"
+              placeholder="Search products, brands and categories..."
+              value="{{ request.GET.q|default:'' }}"
+              autocomplete="off"
+            />
+            <button type="submit" class="btn btn-search" id="search-submit-btn" aria-label="Search">
+              <i class="bi bi-search"></i>
+            </button>
+          </form>
+
+          <!-- Autocomplete results dropdown -->
+          <div id="search-results-dropdown" class="search-results-dropdown"></div>
+        </div>
+      </div>
+
+      <!-- User Nav Actions (Account, Wishlist, Cart) -->
+      <div class="col-6 col-md-4 col-lg-4 order-2 order-md-3">
+        <div class="d-flex justify-content-end align-items-center gap-2 gap-lg-3">
+
+          <!-- User Account Menu -->
+          {% if user.is_authenticated %}
+          <div class="dropdown">
+            <a href="#" class="nav-action-btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="user-menu-dropdown">
+              <i class="bi bi-person-circle fs-5 text-warning"></i>
+              <div class="d-none d-lg-block text-start lh-1">
+                <span class="text-white-50" style="font-size:0.7rem;">Hello,</span>
+                <div class="fw-bold text-white text-truncate" style="max-width: 90px;">{{ user.first_name|default:user.username }}</div>
+              </div>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="user-menu-dropdown">
+              <li class="dropdown-header text-uppercase fw-bold text-muted small">My Account</li>
+              <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'orders:my_orders' %}"><i class="bi bi-box-seam me-2"></i>My Orders</a></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:address_list' %}"><i class="bi bi-geo-alt me-2"></i>Saved Addresses</a></li>
+              <li><a class="dropdown-item" href="{% url 'wishlist:wishlist' %}"><i class="bi bi-heart me-2"></i>My Wishlist</a></li>
+              {% if user.is_staff %}
+              <li><hr class="dropdown-divider"></li>
+              <li class="dropdown-header text-warning fw-bold small"><i class="bi bi-shield-check me-1"></i>Admin Dashboard</li>
+              <li><a class="dropdown-item text-primary fw-bold" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2 me-2"></i>Admin Panel</a></li>
+              <li><a class="dropdown-item" href="{% url 'dashboard:product_list' %}"><i class="bi bi-tags me-2"></i>Manage Products</a></li>
+              <li><a class="dropdown-item" href="{% url 'dashboard:order_list' %}"><i class="bi bi-bag-check me-2"></i>Manage Orders</a></li>
+              {% endif %}
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sign Out</a></li>
+            </ul>
+          </div>
+          {% else %}
+          <a href="{% url 'accounts:login' %}" class="nav-action-btn" id="login-nav-btn">
+            <i class="bi bi-person fs-5"></i>
+            <span class="d-none d-lg-inline">Sign In</span>
+          </a>
+          {% endif %}
+
+          <!-- Wishlist Badge -->
+          <a href="{% url 'wishlist:wishlist' %}" class="nav-action-btn position-relative" id="wishlist-nav-btn" title="Wishlist">
+            <i class="bi bi-heart fs-5"></i>
+            <span class="action-badge" id="header-wishlist-count">{{ wishlist_count }}</span>
+          </a>
+
+          <!-- Cart Button -->
+          <a href="{% url 'cart:cart_detail' %}" class="nav-cart-btn d-flex align-items-center gap-2 text-decoration-none" id="cart-nav-btn">
+            <div class="position-relative">
+              <i class="bi bi-cart3 fs-5"></i>
+              <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="header-cart-count" style="font-size:0.68rem;">
+                {{ cart_count }}
+              </span>
+            </div>
+            <div class="d-none d-xl-flex flex-column text-start lh-1">
+              <span style="font-size:0.68rem; color: #1e293b;">Cart Total</span>
+              <span class="fw-bold text-dark">₹{{ cart_subtotal|default:"0.00" }}</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Secondary Category Ribbon Sub-bar -->
+<nav class="category-ribbon">
+  <div class="container d-flex align-items-center gap-1">
+    <div class="dropdown d-inline-block">
+      <button class="btn ribbon-link text-white fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="bi bi-list fs-6"></i> All Departments
+      </button>
+      <ul class="dropdown-menu shadow border-0">
+        <li><a class="dropdown-item" href="{% url 'catalog:product_list' %}"><i class="bi bi-grid me-2"></i>All Products</a></li>
+        <li><hr class="dropdown-divider"></li>
+        {% for cat in nav_categories %}
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ cat.get_absolute_url }}">
+            <i class="bi {{ cat.icon_class }} text-warning"></i> {{ cat.name }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% for cat in nav_categories|slice:":5" %}
+    <a href="{{ cat.get_absolute_url }}" class="ribbon-link">
+      {{ cat.name }}
+    </a>
+    {% endfor %}
+
+    <a href="{% url 'catalog:product_list' %}?sort=bestseller" class="ribbon-link deals-link">
+      <i class="bi bi-fire text-warning"></i> Best Sellers
+    </a>
+
+    <a href="{% url 'catalog:product_list' %}" class="ribbon-link">
+      <i class="bi bi-tag text-warning"></i> Latest Deals
+    </a>
+
+    <a href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale!%20I%20would%20like%20to%20order." target="_blank" rel="noopener" class="ribbon-link text-success ms-auto d-none d-lg-inline-flex">
+      <i class="bi bi-whatsapp"></i> Order on WhatsApp
+    </a>
+  </div>
+</nav>

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In to Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 480px;">
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+    <div class="card-header bg-dark text-white p-4 text-center" style="border-bottom: 3px solid var(--plat-yellow);">
+      <div class="d-inline-flex align-items-center justify-content-center p-2 rounded-3 bg-warning text-dark mb-2">
+        <img src="{% static 'images/logo.jpg' %}" alt="Plat4Sale Logo" style="height: 38px; border-radius: 6px;" />
+      </div>
+      <h1 class="h4 fw-bold mb-1">Sign In to Plat4Sale</h1>
+      <p class="text-white-50 small mb-0">Enter your credentials to manage your cart, orders & addresses.</p>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger small p-2 mb-3">
+        {% for error in form.non_field_errors %}
+          <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}" />
+
+        <div class="mb-3">
+          <label class="form-label fw-bold small text-muted">Username or Email Address</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between">
+            <label class="form-label fw-bold small text-muted">Password</label>
+          </div>
+          {{ form.password }}
+          {% if form.password.errors %}
+          <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm mb-3">
+          <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+        </button>
+
+        <div class="p-3 bg-light rounded-3 text-center small text-muted mb-3">
+          <div class="fw-bold text-dark mb-1">Demo Credentials:</div>
+          <div>Admin: <code>admin</code> / <code>adminpassword123</code></div>
+          <div>Customer: <code>shijo</code> / <code>customerpass123</code></div>
+        </div>
+
+        <div class="text-center small">
+          Don't have an account yet?
+          <a href="{% url 'accounts:register' %}{% if next %}?next={{ next }}{% endif %}" class="fw-bold text-dark text-decoration-none">
+            Create an Account →
+          </a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

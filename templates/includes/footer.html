@@ -1,0 +1,85 @@
+{% load static %}
+<footer class="footer-main">
+  <div class="container pb-4">
+    <div class="row g-4">
+
+      <!-- Column 1: Brand Info -->
+      <div class="col-12 col-md-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <img src="{% static 'images/logo.jpg' %}" alt="Plat4Sale Logo" class="navbar-brand-img" style="height: 48px;" />
+          <div>
+            <h4 class="brand-text-title mb-0">Plat<span>4</span>Sale</h4>
+            <span class="brand-text-tagline">FIND • SHOP • LOVE</span>
+          </div>
+        </div>
+        <p class="small text-white-50">
+          Your premier destination for high-performance audio, footwear, smart wearables, and daily lifestyle essentials. Fast delivery, Cash on Delivery, and instant WhatsApp support across India.
+        </p>
+        <div class="d-flex align-items-center gap-3 mt-3">
+          <a href="https://wa.me/{{ store.whatsapp_number }}" target="_blank" rel="noopener" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+            <i class="bi bi-whatsapp me-1"></i> WhatsApp Support
+          </a>
+        </div>
+      </div>
+
+      <!-- Column 2: Quick Links -->
+      <div class="col-6 col-md-2">
+        <h5 class="footer-heading">Shop by Category</h5>
+        {% for cat in nav_categories|slice:":5" %}
+        <a href="{{ cat.get_absolute_url }}" class="footer-link">{{ cat.name }}</a>
+        {% endfor %}
+        <a href="{% url 'catalog:product_list' %}" class="footer-link text-warning fw-bold">All Departments →</a>
+      </div>
+
+      <!-- Column 3: Customer Care -->
+      <div class="col-6 col-md-3">
+        <h5 class="footer-heading">Customer Services</h5>
+        <a href="{% url 'orders:my_orders' %}" class="footer-link">Track Your Order</a>
+        <a href="{% url 'accounts:address_list' %}" class="footer-link">Saved Addresses</a>
+        <a href="{% url 'cart:cart_detail' %}" class="footer-link">View Shopping Cart</a>
+        <a href="{% url 'wishlist:wishlist' %}" class="footer-link">My Saved Wishlist</a>
+        <a href="{% url 'accounts:profile' %}" class="footer-link">Account Profile</a>
+      </div>
+
+      <!-- Column 4: WhatsApp Hotline & Guarantees -->
+      <div class="col-12 col-md-3">
+        <h5 class="footer-heading">Quick Order on WhatsApp</h5>
+        <p class="small text-white-50 mb-2">
+          Place orders directly without hassle. Message us on WhatsApp:
+        </p>
+        <div class="p-3 rounded-3 bg-secondary bg-opacity-25 border border-secondary mb-3">
+          <div class="d-flex align-items-center gap-2 text-white">
+            <i class="bi bi-whatsapp text-success fs-4"></i>
+            <div>
+              <div class="fw-bold" style="font-size:0.95rem;">{{ store.support_phone }}</div>
+              <div class="small text-white-50">Instant response 9 AM - 9 PM</div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-dark border text-light"><i class="bi bi-truck me-1 text-warning"></i> Fast Delivery</span>
+          <span class="badge bg-dark border text-light"><i class="bi bi-cash me-1 text-success"></i> Cash on Delivery</span>
+          <span class="badge bg-dark border text-light"><i class="bi bi-shield-check me-1 text-info"></i> 100% Genuine</span>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="border-secondary opacity-25 my-4">
+
+    <!-- Bottom copyright -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-white-50 gap-2">
+      <div>
+        © {{ current_year }} <strong>Plat4Sale</strong>. All Rights Reserved. FIND • SHOP • LOVE.
+      </div>
+      <div class="d-flex gap-3">
+        <a href="{% url 'catalog:home' %}" class="text-white-50 text-decoration-none">Home</a>
+        <a href="{% url 'catalog:product_list' %}" class="text-white-50 text-decoration-none">Catalog</a>
+        <a href="{% url 'orders:checkout' %}" class="text-white-50 text-decoration-none">Checkout</a>
+        {% if user.is_authenticated and user.is_staff %}
+        <a href="{% url 'dashboard:home' %}" class="text-warning text-decoration-none fw-bold"><i class="bi bi-speedometer2"></i> Admin Panel</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</footer>

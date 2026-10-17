@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Confirmed #{{ order.order_number }} — Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 820px;">
+
+  <!-- Success Card -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="bg-dark p-4 p-md-5 text-white text-center position-relative" style="border-bottom: 4px solid var(--plat-yellow);">
+      <div class="d-inline-flex p-3 rounded-circle bg-success text-white fs-1 mb-3 shadow">
+        <i class="bi bi-check-lg"></i>
+      </div>
+      <h1 class="h2 fw-bold mb-1">Thank You! Your Order is Placed</h1>
+      <p class="text-white-50 mb-3">Order has been registered in the Plat4Sale system.</p>
+      <div class="d-inline-block bg-white bg-opacity-10 px-4 py-2 rounded-pill border border-white border-opacity-25">
+        <span class="text-white-50 small me-1">ORDER NUMBER:</span>
+        <strong class="text-warning fs-5 tracking-wide">{{ order.order_number }}</strong>
+      </div>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+
+      <!-- WhatsApp Order Confirmation Callout -->
+      <div class="p-4 rounded-4 mb-4 border" style="background-color: #F0FDF4; border-color: #86EFAC !important;">
+        <div class="row align-items-center g-3">
+          <div class="col-md-8">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-whatsapp text-success fs-3"></i>
+              <h3 class="h5 fw-bold mb-0 text-success">Confirm Your Order via WhatsApp</h3>
+            </div>
+            <p class="small text-secondary mb-0">
+              For instant dispatch, notify our team on WhatsApp. Click the button to send your pre-filled order slip directly to our WhatsApp support desk (<strong>{{ store.support_phone }}</strong>).
+            </p>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg w-100 fw-bold shadow">
+              <i class="bi bi-whatsapp"></i> Send on WhatsApp
+            </a>
+          </div>
+        </div>
+
+        <!-- Collapsible WhatsApp message preview -->
+        <div class="mt-3 pt-3 border-top border-success-subtle">
+          <a class="small text-success text-decoration-none fw-bold" data-bs-toggle="collapse" href="#waPreviewCollapse" role="button">
+            <i class="bi bi-eye me-1"></i> Preview WhatsApp message slip
+          </a>
+          <div class="collapse mt-2" id="waPreviewCollapse">
+            <div class="p-3 bg-white rounded-3 border small font-monospace text-secondary" style="white-space: pre-line;">
+{{ order.get_whatsapp_text }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Status Progress Bar -->
+      <div class="mb-5">
+        <h4 class="h6 fw-bold text-uppercase text-muted mb-4 text-center">Order Status Roadmap</h4>
+        <div class="order-tracker">
+          <div class="tracker-step {% if order.status in 'pending confirmed processing shipped delivered' %}completed{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-receipt"></i></div>
+            <span class="tracker-label">Placed</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'confirmed processing shipped delivered' %}completed{% elif order.status == 'pending' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-check2"></i></div>
+            <span class="tracker-label">Confirmed</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'processing shipped delivered' %}completed{% elif order.status == 'confirmed' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-box-seam"></i></div>
+            <span class="tracker-label">Processing</span>
+          </div>
+          <div class="tracker-step {% if order.status in 'shipped delivered' %}completed{% elif order.status == 'processing' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-truck"></i></div>
+            <span class="tracker-label">Shipped</span>
+          </div>
+          <div class="tracker-step {% if order.status == 'delivered' %}completed{% elif order.status == 'shipped' %}active{% endif %}">
+            <div class="tracker-dot"><i class="bi bi-house-door"></i></div>
+            <span class="tracker-label">Delivered</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Details Summary -->
+      <div class="row g-4 mb-4">
+        <!-- Customer & Address -->
+        <div class="col-md-6">
+          <div class="p-3 rounded-3 bg-light border h-100">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-geo-alt text-warning me-1"></i> Delivery Address</h6>
+            <div class="fw-bold text-dark">{{ order.customer_name }}</div>
+            <div class="small text-muted mb-1"><i class="bi bi-telephone me-1"></i>{{ order.customer_phone }}</div>
+            <div class="small text-secondary">{{ order.full_shipping_address }}</div>
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="col-md-6">
+          <div class="p-3 rounded-3 bg-light border h-100">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-credit-card text-warning me-1"></i> Payment Summary</h6>
+            <div class="small mb-1">
+              <span class="text-muted">Payment Mode:</span>
+              <strong class="text-dark">{{ order.get_payment_method_display }}</strong>
+            </div>
+            <div class="small mb-1">
+              <span class="text-muted">Payment Status:</span>
+              <span class="badge {% if order.payment_status == 'paid' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ order.get_payment_status_display }}
+              </span>
+            </div>
+            <div class="small">
+              <span class="text-muted">Order Placed Date:</span>
+              <span class="text-dark">{{ order.created_at|date:"M d, Y - h:i A" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <h5 class="fw-bold mb-3">Purchased Items</h5>
+      <div class="table-responsive border rounded-3 mb-4">
+        <table class="table mb-0 align-middle">
+          <thead class="table-light small">
+            <tr>
+              <th>Item</th>
+              <th class="text-center">Price</th>
+              <th class="text-center">Qty</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>
+                <div class="fw-bold text-dark">{{ item.product_name }}</div>
+                {% if item.product_sku %}
+                <div class="small text-muted">SKU: {{ item.product_sku }}</div>
+                {% endif %}
+              </td>
+              <td class="text-center small">₹{{ item.unit_price }}</td>
+              <td class="text-center small">{{ item.quantity }}</td>
+              <td class="text-end fw-bold">₹{{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="table-light">
+              <td colspan="3" class="text-end text-muted small">Subtotal:</td>
+              <td class="text-end fw-bold">₹{{ order.subtotal }}</td>
+            </tr>
+            <tr class="table-light">
+              <td colspan="3" class="text-end text-muted small">Delivery Charges:</td>
+              <td class="text-end fw-bold">
+                {% if order.shipping_fee == 0 %}FREE{% else %}₹{{ order.shipping_fee }}{% endif %}
+              </td>
+            </tr>
+            <tr class="table-light">
+              <td colspan="3" class="text-end fw-bold">Total Amount:</td>
+              <td class="text-end fw-bold fs-5 text-dark">₹{{ order.total_amount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="d-flex flex-wrap gap-2 justify-content-center">
+        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-dark px-4">
+          <i class="bi bi-file-earmark-text me-1"></i> View Order Details
+        </a>
+        <a href="{% url 'orders:my_orders' %}" class="btn btn-warning fw-bold px-4">
+          <i class="bi bi-box-seam me-1"></i> My Orders
+        </a>
+        <a href="{% url 'catalog:home' %}" class="btn btn-light px-4">
+          Continue Shopping
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

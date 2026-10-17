@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} — Buy Online at Plat4Sale{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'catalog:home' %}" class="text-muted text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ product.category.get_absolute_url }}" class="text-muted text-decoration-none">{{ product.category.name }}</a></li>
+      <li class="breadcrumb-item active text-truncate" style="max-width: 300px;" aria-current="page">{{ product.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4 mb-5">
+
+    <!-- Left Column: Gallery -->
+    <div class="col-lg-6">
+      <div class="product-gallery-main mb-3 position-relative">
+        {% if product.discount_percentage > 0 %}
+          <span class="discount-badge" style="font-size:0.85rem; padding: 5px 12px;">{{ product.discount_percentage }}% OFF</span>
+        {% endif %}
+        {% if product.primary_image %}
+          <img id="main-product-img" src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
+        {% else %}
+          <img id="main-product-img" src="{% static 'images/logo.jpg' %}" alt="{{ product.name }}" />
+        {% endif %}
+      </div>
+
+      <!-- Thumbnail Selector -->
+      {% if images|length > 1 %}
+      <div class="d-flex gap-2 justify-content-center flex-wrap">
+        {% for img in images %}
+        <div class="gallery-thumb-item {% if forloop.first %}active{% endif %}" onclick="changeMainImage('{{ img.image.url }}', this)">
+          <img src="{{ img.image.url }}" alt="Thumbnail" />
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Product Info & Purchase Form -->
+    <div class="col-lg-6">
+      <div class="bg-white p-4 rounded-4 border shadow-sm">
+
+        <!-- Category & SKU -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <a href="{{ product.category.get_absolute_url }}" class="text-uppercase fw-bold text-muted small text-decoration-none">
+            {{ product.category.name }}
+          </a>
+          <span class="badge bg-light text-muted border">SKU: {{ product.sku }}</span>
+        </div>
+
+        <!-- Title -->
+        <h1 class="h3 fw-bold mb-2">{{ product.name }}</h1>
+
+        <!-- Rating Summary -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="text-warning">
+            <i class="bi bi-star-fill"></i>
+            <span class="fw-bold text-dark ms-1">{{ product.average_rating }}</span>
+          </div>
+          <span class="text-muted small">|</span>
+          <a href="#reviews-section" class="text-muted small text-decoration-none">
+            {{ reviews_count }} Rating{{ reviews_count|pluralize }} & Review{{ reviews_count|pluralize }}
+          </a>
+          {% if product.is_bestseller %}
+          <span class="badge bg-warning text-dark ms-2 fw-bold">Best Seller</span>
+          {% endif %}
+        </div>
+
+        <!-- Pricing Block -->
+        <div class="p-3 rounded-3 bg-light mb-4 border">
+          <div class="d-flex align-items-baseline gap-3 mb-1">
+            <span class="display-6 fw-bold text-dark">₹{{ product.current_price }}</span>
+            {% if product.sale_price and product.sale_price < product.price %}
+              <span class="fs-5 text-muted text-decoration-line-through">₹{{ product.price }}</span>
+              <span class="badge bg-danger fs-6 fw-bold">{{ product.discount_percentage }}% OFF</span>
+            {% endif %}
+          </div>
+          <div class="small text-muted">
+            <i class="bi bi-info-circle me-1"></i> Inclusive of all taxes. Free shipping on orders over ₹499.
+          </div>
+        </div>
+
+        <!-- Short Description -->
+        {% if product.short_description %}
+        <p class="text-muted mb-4">{{ product.short_description }}</p>
+        {% endif %}
+
+        <!-- Stock Status -->
+        <div class="mb-4">
+          {% if product.in_stock %}
+            {% if product.stock <= 5 %}
+              <div class="d-flex align-items-center gap-2 text-warning fw-bold">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Hurry! Only {{ product.stock }} units remaining in stock.</span>
+              </div>
+            {% else %}
+              <div class="d-flex align-items-center gap-2 text-success fw-bold">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>In Stock & Ready to Ship</span>
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="d-flex align-items-center gap-2 text-danger fw-bold">
+              <i class="bi bi-x-circle-fill"></i>
+              <span>Currently Out of Stock</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Purchase Action Form -->
+        {% if product.in_stock %}
+        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="mb-4">
+          {% csrf_token %}
+          <div class="row g-2 align-items-center mb-3">
+            <div class="col-auto">
+              <label for="detail-qty" class="col-form-label fw-bold small text-muted">Quantity:</label>
+            </div>
+            <div class="col-auto">
+              <div class="qty-counter">
+                <button type="button" class="qty-btn" onclick="adjustQty(-1)">-</button>
+                <input type="number" id="detail-qty" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-val border-0" readonly />
+                <button type="button" class="qty-btn" onclick="adjustQty(1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <button type="submit" class="btn btn-warning w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm">
+                <i class="bi bi-cart-plus fs-5"></i> Add to Cart
+              </button>
+            </div>
+            <div class="col-6">
+              <button type="submit" name="buy_now" value="1" class="btn btn-plat-primary w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm">
+                <i class="bi bi-lightning-fill fs-5"></i> Buy Now
+              </button>
+            </div>
+          </div>
+        </form>
+        {% endif %}
+
+        <!-- WhatsApp Quick Inquire / Order Button -->
+        <div class="mb-4">
+          <a
+            href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale!%20I%20want%20to%20order%20the%20following%20product:%0A•%20*{{ product.name|urlencode }}*%0A•%20*SKU:*%20{{ product.sku }}%0A•%20*Price:*%20%E2%82%B9{{ product.current_price }}%0APlease%20let%20me%20know%20how%20to%20proceed."
+            target="_blank"
+            rel="noopener"
+            class="btn btn-whatsapp w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-bold"
+          >
+            <i class="bi bi-whatsapp fs-5"></i> Order / Inquire on WhatsApp
+          </a>
+        </div>
+
+        <!-- Wishlist Toggle -->
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+          <form action="{% url 'wishlist:toggle_wishlist' product.id %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+              <i class="bi {% if is_wishlisted %}bi-heart-fill text-danger{% else %}bi-heart{% endif %} me-1"></i>
+              {% if is_wishlisted %}Saved in Wishlist{% else %}Add to Wishlist{% endif %}
+            </button>
+          </form>
+
+          <span class="text-muted small">
+            <i class="bi bi-shield-check text-success me-1"></i> Verified Merchant
+          </span>
+        </div>
+
+        <!-- Trust Badges List -->
+        <div class="mt-4 pt-3 border-top">
+          <div class="row g-2 text-muted small">
+            <div class="col-6"><i class="bi bi-check2-circle text-success me-1"></i> 100% Genuine Product</div>
+            <div class="col-6"><i class="bi bi-cash-coin text-success me-1"></i> Cash on Delivery Available</div>
+            <div class="col-6"><i class="bi bi-arrow-counterclockwise text-success me-1"></i> 7-Day Easy Returns</div>
+            <div class="col-6"><i class="bi bi-truck text-success me-1"></i> Express Doorstep Shipping</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Detailed Description & Specifications Section -->
+  <div class="card border-0 shadow-sm rounded-4 mb-5">
+    <div class="card-header bg-white border-bottom p-3">
+      <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active fw-bold text-dark" id="desc-tab" data-bs-toggle="tab" data-bs-target="#desc-pane" type="button">
+            Product Description
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-bold text-dark" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane" type="button">
+            Specifications & Details
+          </button>
+        </li>
+      </ul>
+    </div>
+    <div class="card-body p-4 tab-content" id="productTabsContent">
+      <!-- Description Tab -->
+      <div class="tab-pane fade show active" id="desc-pane">
+        <h4 class="h5 fw-bold mb-3">Overview</h4>
+        <div class="text-secondary lh-lg">
+          {{ product.description|linebreaks }}
+        </div>
+      </div>
+
+      <!-- Specs Tab -->
+      <div class="tab-pane fade" id="specs-pane">
+        <h4 class="h5 fw-bold mb-3">Technical Specifications</h4>
+        <div class="table-responsive" style="max-width: 600px;">
+          <table class="table table-bordered table-striped small">
+            <tbody>
+              <tr><th class="w-50">Product Name</th><td>{{ product.name }}</td></tr>
+              <tr><th>SKU Code</th><td>{{ product.sku }}</td></tr>
+              <tr><th>Department</th><td>{{ product.category.name }}</td></tr>
+              <tr><th>Stock Availability</th><td>{{ product.stock }} units</td></tr>
+              <tr><th>Warranty</th><td>1 Year Manufacturer Warranty</td></tr>
+              <tr><th>Delivery Mode</th><td>Doorstep Courier / COD</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Reviews Section -->
+  <section id="reviews-section" class="card border-0 shadow-sm rounded-4 mb-5">
+    <div class="card-body p-4">
+      <div class="row g-4">
+
+        <!-- Left: Rating Summary -->
+        <div class="col-md-4 text-center border-end-md">
+          <h4 class="h5 fw-bold mb-3">Customer Reviews</h4>
+          <div class="display-3 fw-bold text-dark mb-1">{{ product.average_rating }}</div>
+          <div class="text-warning fs-5 mb-2">
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+            <i class="bi bi-star-fill"></i>
+          </div>
+          <div class="text-muted small mb-4">Based on {{ reviews_count }} review{{ reviews_count|pluralize }}</div>
+
+          {% if user.is_authenticated %}
+            {% if not user_has_reviewed %}
+            <a href="{% url 'reviews:add_review' product.slug %}" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold">
+              <i class="bi bi-pencil-square me-1"></i> Write a Review
+            </a>
+            {% else %}
+            <span class="badge bg-success-subtle text-success p-2">
+              <i class="bi bi-check-circle me-1"></i> You reviewed this item
+            </span>
+            {% endif %}
+          {% else %}
+          <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-outline-dark btn-sm rounded-pill px-4">
+            Sign In to Write a Review
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Right: Reviews List -->
+        <div class="col-md-8">
+          <h5 class="fw-bold mb-3">Verified Buyer Feedback</h5>
+          {% for r in reviews %}
+          <div class="p-3 rounded-3 bg-light mb-3 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark fw-bold">{{ r.rating }} ★</span>
+                <strong class="small text-dark">{{ r.title }}</strong>
+              </div>
+              <span class="text-muted small">{{ r.created_at|date:"M d, Y" }}</span>
+            </div>
+            <p class="small text-secondary mb-2">{{ r.comment }}</p>
+            <div class="small text-muted d-flex align-items-center gap-1">
+              <i class="bi bi-patch-check-fill text-success"></i>
+              <span>{{ r.user.get_full_name|default:r.user.username }} (Verified Buyer)</span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-chat-heart fs-2 text-warning"></i>
+            <p class="mt-2 mb-0">Be the first to review this product!</p>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Products -->
+  {% if related_products %}
+  <section class="my-5">
+    <h3 class="h4 fw-bold mb-3">Customers Also Viewed</h3>
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-4">
+      {% for rel in related_products %}
+      <div class="col">
+        {% include 'includes/product_card.html' with product=rel %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeMainImage(src, el) {
+  document.getElementById('main-product-img').src = src;
+  document.querySelectorAll('.gallery-thumb-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function adjustQty(amount) {
+  const input = document.getElementById('detail-qty');
+  let val = parseInt(input.value) + amount;
+  const max = parseInt(input.getAttribute('max')) || 99;
+  if (val < 1) val = 1;
+  if (val > max) val = max;
+  input.value = val;
+}
+</script>
+{% endblock %}

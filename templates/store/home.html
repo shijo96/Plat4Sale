@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Plat4Sale — FIND • SHOP • LOVE | Best Online Shopping{% endblock %}
+
+{% block content %}
+<div class="container my-3">
+
+  <!-- Hero Carousel Banner -->
+  {% if hero_banners %}
+  <div id="heroCarousel" class="carousel slide hero-slider-wrap" data-bs-ride="carousel" data-bs-interval="5000">
+    <div class="carousel-inner">
+      {% for banner in hero_banners %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <div class="hero-slide-item" style="background-image: url('{{ banner.image.url }}');">
+          <div class="hero-slide-overlay"></div>
+          <div class="hero-slide-content">
+            {% if banner.badge_text %}
+            <span class="hero-badge"><i class="bi bi-lightning-charge-fill me-1"></i>{{ banner.badge_text }}</span>
+            {% endif %}
+            <h1 class="hero-title">{{ banner.title }}</h1>
+            <p class="hero-subtitle">{{ banner.subtitle }}</p>
+            <a href="{{ banner.button_url }}" class="btn-plat-primary">
+              {{ banner.button_text }} <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if hero_banners|length > 1 %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Store Value Propositions Bar -->
+  <div class="row g-3 my-3">
+    <div class="col-6 col-md-3">
+      <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+        <div class="fs-2 text-warning"><i class="bi bi-truck"></i></div>
+        <div>
+          <div class="fw-bold small text-dark">Free Delivery</div>
+          <div class="text-muted" style="font-size:0.75rem;">On all orders over ₹499</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+        <div class="fs-2 text-success"><i class="bi bi-cash-stack"></i></div>
+        <div>
+          <div class="fw-bold small text-dark">Cash on Delivery</div>
+          <div class="text-muted" style="font-size:0.75rem;">Pay when it arrives at door</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+        <div class="fs-2 text-success"><i class="bi bi-whatsapp"></i></div>
+        <div>
+          <div class="fw-bold small text-dark">WhatsApp Ordering</div>
+          <div class="text-muted" style="font-size:0.75rem;">Confirm order in 1-click</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 bg-white rounded-3 border d-flex align-items-center gap-3 shadow-sm h-100">
+        <div class="fs-2 text-primary"><i class="bi bi-arrow-repeat"></i></div>
+        <div>
+          <div class="fw-bold small text-dark">Easy 7-Day Returns</div>
+          <div class="text-muted" style="font-size:0.75rem;">Hassle-free replacement</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Categories -->
+  <section class="my-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+      <div>
+        <span class="text-uppercase fw-bold text-muted small" style="letter-spacing:1px;">EXPLORE OUR DEPARTMENTS</span>
+        <h2 class="h4 mb-0 fw-bold">Shop by Category</h2>
+      </div>
+      <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+        View All <i class="bi bi-chevron-right small"></i>
+      </a>
+    </div>
+
+    <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6">
+      {% for cat in featured_categories %}
+      <div class="col">
+        <a href="{{ cat.get_absolute_url }}" class="cat-card">
+          <div class="cat-icon-wrap">
+            <i class="bi {{ cat.icon_class }}"></i>
+          </div>
+          <div class="cat-name">{{ cat.name }}</div>
+          <div class="cat-count">{{ cat.products.count }} Products</div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Featured Products Section -->
+  <section class="my-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+      <div>
+        <span class="badge bg-warning text-dark mb-1 fw-bold">HANDPICKED FOR YOU</span>
+        <h2 class="h4 mb-0 fw-bold">Featured Products</h2>
+      </div>
+      <a href="{% url 'catalog:product_list' %}" class="btn btn-sm btn-link text-decoration-none fw-bold text-dark">
+        See More <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+      {% for product in featured_products %}
+      <div class="col">
+        {% include 'includes/product_card.html' with product=product %}
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5 text-muted">
+        <p>No featured products available at this time.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Super Deals of the Day Banner Strip -->
+  <section class="p-4 p-md-5 rounded-4 my-5 position-relative overflow-hidden shadow-sm" style="background: linear-gradient(135deg, #131921 0%, #1e293b 100%); border-left: 6px solid var(--plat-yellow);">
+    <div class="row align-items-center">
+      <div class="col-md-8 text-white mb-3 mb-md-0">
+        <span class="badge bg-danger px-3 py-2 fw-bold mb-2">⚡ FLASH SALE ACTIVE</span>
+        <h2 class="display-6 fw-bold mb-2">Super Savings on Trending Audio & Gear</h2>
+        <p class="text-white-50 mb-0">Get up to 50% discount on wireless headsets, smartwatch wearables, and daily accessories. Free shipping included!</p>
+      </div>
+      <div class="col-md-4 text-md-end">
+        <a href="{% url 'catalog:product_list' %}?sort=price_low" class="btn btn-plat-primary btn-lg">
+          Explore Deals <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Best Sellers -->
+  <section class="my-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+      <div>
+        <span class="badge bg-danger px-2 py-1 text-white mb-1 fw-bold">TOP RATED</span>
+        <h2 class="h4 mb-0 fw-bold">Best Sellers in Store</h2>
+      </div>
+      <a href="{% url 'catalog:product_list' %}?sort=bestseller" class="btn btn-sm btn-link text-decoration-none fw-bold text-dark">
+        View All Best Sellers <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+      {% for product in bestsellers %}
+      <div class="col">
+        {% include 'includes/product_card.html' with product=product %}
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-5 text-muted">
+        <p>No best seller products configured.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- New Arrivals -->
+  {% if new_arrivals %}
+  <section class="my-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+      <div>
+        <span class="badge bg-success px-2 py-1 text-white mb-1 fw-bold">JUST ARRIVED</span>
+        <h2 class="h4 mb-0 fw-bold">New Arrivals</h2>
+      </div>
+      <a href="{% url 'catalog:product_list' %}?sort=newest" class="btn btn-sm btn-link text-decoration-none fw-bold text-dark">
+        View All New <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+      {% for product in new_arrivals %}
+      <div class="col">
+        {% include 'includes/product_card.html' with product=product %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- WhatsApp Quick Ordering Promotional Box -->
+  <section class="p-4 p-md-5 rounded-4 bg-white border my-5 shadow-sm text-center">
+    <div class="mx-auto" style="max-width: 600px;">
+      <div class="d-inline-flex p-3 rounded-circle bg-success bg-opacity-10 text-success fs-1 mb-3">
+        <i class="bi bi-whatsapp"></i>
+      </div>
+      <h3 class="fw-bold mb-2">Prefer to Order Directly on WhatsApp?</h3>
+      <p class="text-muted mb-4">
+        You can place your order or ask questions about size, color, and delivery directly with our team on WhatsApp. Fast verification and Cash on Delivery supported!
+      </p>
+      <a href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale!%20I%20would%20like%20to%20place%20an%20order." target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg">
+        <i class="bi bi-whatsapp fs-5"></i> Chat on WhatsApp Now
+      </a>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

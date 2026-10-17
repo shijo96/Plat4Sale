@@ -1,0 +1,156 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Product Catalog Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header with Add Button -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h4 fw-bold mb-0">Products ({{ page_obj.paginator.count }})</h2>
+      <span class="text-muted small">Manage items, pricing, inventory stock, and image gallery.</span>
+    </div>
+    <a href="{% url 'dashboard:product_add' %}" class="btn btn-warning fw-bold">
+      <i class="bi bi-plus-lg me-1"></i> Add New Product
+    </a>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="bg-white p-3 rounded-4 border shadow-sm mb-4">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+          <input type="text" name="q" class="form-control border-start-0" placeholder="Search product by title or SKU..." value="{{ q }}" />
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All Categories</option>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="stock" class="form-select form-select-sm">
+          <option value="">All Stock Levels</option>
+          <option value="in" {% if stock_status == 'in' %}selected{% endif %}>In Stock (> 5)</option>
+          <option value="low" {% if stock_status == 'low' %}selected{% endif %}>Low Stock (1 - 5)</option>
+          <option value="out" {% if stock_status == 'out' %}selected{% endif %}>Out of Stock (0)</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold">Filter</button>
+        <a href="{% url 'dashboard:product_list' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Products Table -->
+  <div class="bg-white rounded-4 border shadow-sm overflow-hidden mb-4">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light small">
+          <tr>
+            <th style="width: 70px;">Image</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th>SKU</th>
+            <th>MRP</th>
+            <th>Offer Price</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in page_obj %}
+          <tr>
+            <td>
+              {% if p.primary_image %}
+              <img src="{{ p.primary_image.image.url }}" alt="{{ p.name }}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px;" />
+              {% else %}
+              <img src="{% static 'images/logo.jpg' %}" alt="{{ p.name }}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px;" />
+              {% endif %}
+            </td>
+            <td>
+              <div class="fw-bold text-dark">{{ p.name }}</div>
+              <div class="d-flex gap-1 mt-1">
+                {% if p.is_featured %}<span class="badge bg-warning text-dark" style="font-size:0.65rem;">Featured</span>{% endif %}
+                {% if p.is_bestseller %}<span class="badge bg-danger" style="font-size:0.65rem;">Best Seller</span>{% endif %}
+                {% if p.is_new_arrival %}<span class="badge bg-info text-dark" style="font-size:0.65rem;">New</span>{% endif %}
+              </div>
+            </td>
+            <td><span class="badge bg-light text-dark border">{{ p.category.name }}</span></td>
+            <td><code class="text-secondary small">{{ p.sku }}</code></td>
+            <td class="text-muted small">₹{{ p.price }}</td>
+            <td><strong class="text-dark">₹{{ p.current_price }}</strong></td>
+            <td>
+              {% if p.stock <= 0 %}
+                <span class="badge bg-danger">0 Out</span>
+              {% elif p.stock <= 5 %}
+                <span class="badge bg-warning text-dark">{{ p.stock }} Low</span>
+              {% else %}
+                <span class="badge bg-success">{{ p.stock }} In</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if p.is_active %}
+                <span class="badge bg-success-subtle text-success">Active</span>
+              {% else %}
+                <span class="badge bg-secondary">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ p.get_absolute_url }}" target="_blank" class="btn btn-outline-secondary" title="View in Store">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'dashboard:product_edit' p.id %}" class="btn btn-outline-dark" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form action="{% url 'dashboard:product_delete' p.id %}" method="POST" onsubmit="return confirm('Delete product {{ p.name }}?');" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-5 text-muted">
+              No products found matching your filter criteria.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="p-3 border-top d-flex justify-content-center">
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">Previous</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">Next</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
