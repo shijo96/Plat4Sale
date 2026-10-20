@@ -1,5 +1,5 @@
 {% load static %}
-<div class="product-card" id="product-card-{{ product.id }}">
+<div class="product-card" id="product-card-{{ product.id }}" data-product-id="{{ product.id }}">
   <!-- Thumbnail & Badges -->
   <div class="product-thumb-wrap">
     {% if product.discount_percentage > 0 %}
@@ -59,20 +59,35 @@
     <div class="mt-auto">
       {% if product.in_stock %}
         {% if product.stock <= 5 %}
-          <div class="stock-status-pill stock-low">Only {{ product.stock }} left in stock!</div>
+          <div class="stock-status-pill stock-low mb-2 text-danger fw-bold small">
+            <i class="bi bi-fire"></i> Only {{ product.stock }} left — High demand!
+          </div>
         {% else %}
-          <div class="stock-status-pill stock-in">In Stock</div>
+          <div class="stock-status-pill stock-in mb-2 text-success fw-bold small">
+            <i class="bi bi-check-circle"></i> In Stock
+          </div>
         {% endif %}
-        <button
-          type="button"
-          class="btn-add-cart ajax-add-cart-btn"
-          data-product-id="{{ product.id }}"
-          id="add-cart-btn-{{ product.id }}"
-        >
-          <i class="bi bi-cart-plus"></i> Add to Cart
-        </button>
+
+        {% if product.id in cart_product_ids %}
+          <a
+            href="{% url 'cart:cart_detail' %}"
+            class="btn btn-in-cart btn-sm w-100"
+            id="in-cart-btn-{{ product.id }}"
+          >
+            <i class="bi bi-check-circle-fill"></i> In Cart · Go to Cart →
+          </a>
+        {% else %}
+          <button
+            type="button"
+            class="btn-add-cart ajax-add-cart-btn"
+            data-product-id="{{ product.id }}"
+            id="add-cart-btn-{{ product.id }}"
+          >
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+        {% endif %}
       {% else %}
-        <div class="stock-status-pill stock-out">Out of Stock</div>
+        <div class="stock-status-pill stock-out mb-2 text-muted small">Out of Stock</div>
         <button type="button" class="btn btn-secondary w-100 btn-sm disabled" disabled>
           Out of Stock
         </button>

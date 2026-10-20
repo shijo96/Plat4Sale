@@ -13,26 +13,91 @@
     </div>
   </div>
 
-  <form method="POST" class="bg-white p-4 p-md-5 rounded-4 border shadow-sm">
+  <form method="POST" enctype="multipart/form-data" class="bg-white p-4 p-md-5 rounded-4 border shadow-sm">
     {% csrf_token %}
 
     <div class="p-4 rounded-4 mb-4 border" style="background-color: #F0FDF4; border-color: #86EFAC !important;">
       <div class="d-flex align-items-center gap-2 mb-2">
         <i class="bi bi-whatsapp text-success fs-3"></i>
-        <h5 class="fw-bold mb-0 text-success">WhatsApp Business Ordering Hotline</h5>
+        <h5 class="fw-bold mb-0 text-success">WhatsApp Ordering & Automated Admin Alerts</h5>
       </div>
       <p class="small text-secondary mb-3">
-        When customers confirm orders or click "Chat on WhatsApp", messages will be directed to this phone number.
-        Enter with country code (e.g. <code>919876543210</code> without spaces or +).
+        Configure customer ordering hotline and automated notifications for order details and stock alerts.
       </p>
-      <div class="row g-3">
+      <div class="row g-3 mb-3">
         <div class="col-md-6">
-          <label class="form-label fw-bold small text-muted">WhatsApp Number (e.g. 919876543210) *</label>
+          <label class="form-label fw-bold small text-muted">Customer Ordering WhatsApp (e.g. 919876543210) *</label>
           {{ form.whatsapp_number }}
+          <div class="form-text small text-muted">Directs customer order slips and inquiries to this number.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold small text-muted">Admin Alert WhatsApp Number *</label>
+          {{ form.admin_whatsapp_number }}
+          <div class="form-text small text-muted">Admin receives automated order alerts & low stock notifications here.</div>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold small text-muted">Customer Support Phone Display *</label>
           {{ form.support_phone }}
+        </div>
+      </div>
+
+      <div class="p-3 bg-white rounded-3 border">
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-bell-fill text-warning me-1"></i> Automated WhatsApp Alert Triggers:</h6>
+        <div class="form-check mb-2">
+          {{ form.auto_whatsapp_notification }}
+          <label class="form-check-label small fw-bold" for="{{ form.auto_whatsapp_notification.id_for_label }}">
+            Automated WhatsApp Notification to Admin upon EVERY new customer order
+          </label>
+          <div class="form-text small text-muted ms-4">Dispatches instant message to Admin WhatsApp with customer name, items, selected sizes/colors, total amount, and delivery address.</div>
+        </div>
+        <div class="form-check">
+          {{ form.low_stock_whatsapp_alert }}
+          <label class="form-check-label small fw-bold" for="{{ form.low_stock_whatsapp_alert.id_for_label }}">
+            Automated WhatsApp Alert to Admin when product stock drops to 5 units or below
+          </label>
+          <div class="form-text small text-muted ms-4">Instantly alerts admin when a product hits high-demand critical stock level (≤ 5 units).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Gateways & Active/Inactive Toggles -->
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+      <i class="bi bi-credit-card-2-front text-primary me-1"></i> Ordering & Payment Methods (Active / Inactive)
+    </h5>
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <div class="p-3 border rounded-3 bg-success bg-opacity-10 border-success border-opacity-25">
+          <div class="form-check form-switch mb-2">
+            {{ form.whatsapp_only_orders }}
+            <label class="form-check-label fw-bold text-success fs-6" for="{{ form.whatsapp_only_orders.id_for_label }}">
+              <i class="bi bi-whatsapp me-1"></i> WhatsApp Orders Only (Customer Direct WhatsApp Checkout)
+            </label>
+          </div>
+          <div class="text-muted small">
+            When enabled, all customer checkout requests will be routed directly via WhatsApp with automated order slips. Standard online card/gateway forms are bypassed.
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3 bg-light h-100">
+          <div class="form-check form-switch mb-2">
+            {{ form.cod_enabled }}
+            <label class="form-check-label fw-bold text-dark" for="{{ form.cod_enabled.id_for_label }}">
+              <i class="bi bi-cash-stack text-success me-1"></i> Cash on Delivery (COD)
+            </label>
+          </div>
+          <div class="text-muted small">Enable or disable Cash on Delivery checkout option for customers on the storefront.</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3 bg-light h-100">
+          <div class="form-check form-switch mb-2">
+            {{ form.online_payment_enabled }}
+            <label class="form-check-label fw-bold text-dark" for="{{ form.online_payment_enabled.id_for_label }}">
+              <i class="bi bi-qr-code-scan text-primary me-1"></i> Online Payment / UPI
+            </label>
+          </div>
+          <div class="text-muted small">Enable or disable Online Payment (Google Pay, PhonePe, Paytm, QR code) option for customers.</div>
         </div>
       </div>
     </div>
@@ -87,6 +152,68 @@
           <label class="form-check-label small fw-bold" for="{{ form.announcement_active.id_for_label }}">
             Display Announcement Bar on public website
           </label>
+        </div>
+      </div>
+    </div>
+
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-search text-primary me-2"></i> Search Engine Optimization (SEO) & Webmaster</span>
+      <span class="badge bg-primary-subtle text-primary small">Google & Social Ready</span>
+    </h5>
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Default Website SEO Title</label>
+        {{ form.seo_meta_title }}
+        <div class="text-muted small mt-1">Shown in browser tabs & Google search snippet title.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Canonical Website Base URL</label>
+        {{ form.canonical_base_url }}
+        <div class="text-muted small mt-1">Live production domain (e.g. <code>https://plat4sale.com</code>).</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-bold small text-muted">Default Search Meta Description</label>
+        {{ form.seo_meta_description }}
+        <div class="text-muted small mt-1">Recommended length: 150-160 characters. Appears below title in search results.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">SEO Keywords</label>
+        {{ form.seo_meta_keywords }}
+        <div class="text-muted small mt-1">Comma-separated keywords (e.g. <code>plat4sale, sneakers, electronics, whatsapp order</code>).</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Social Share Banner (OpenGraph Image)</label>
+        {{ form.seo_og_image }}
+        {% if store.seo_og_image %}
+        <div class="mt-1 small text-success">
+          <i class="bi bi-image me-1"></i> Current banner: <a href="{{ store.seo_og_image.url }}" target="_blank" class="fw-bold text-success">View Active Image</a>
+        </div>
+        {% endif %}
+        <div class="text-muted small mt-1">Recommended size: 1200x630px for WhatsApp & Facebook link cards.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Google Search Console Verification Tag</label>
+        {{ form.google_search_console_code }}
+        <div class="text-muted small mt-1">Verification string from Google Search Console (HTML tag content).</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">Google Analytics / Measurement ID</label>
+        {{ form.google_analytics_id }}
+        <div class="text-muted small mt-1">GA4 Measurement ID (e.g. <code>G-XXXXXXXXXX</code>).</div>
+      </div>
+      <div class="col-12">
+        <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="small text-muted">
+            <i class="bi bi-robot text-dark me-1"></i> Search Engine Crawlers & Indexing Endpoints:
+          </div>
+          <div class="d-flex gap-2">
+            <a href="/robots.txt" target="_blank" class="btn btn-outline-dark btn-sm">
+              <i class="bi bi-file-earmark-code me-1"></i> View robots.txt
+            </a>
+            <a href="/sitemap.xml" target="_blank" class="btn btn-outline-dark btn-sm">
+              <i class="bi bi-diagram-3 me-1"></i> View sitemap.xml
+            </a>
+          </div>
         </div>
       </div>
     </div>

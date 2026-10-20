@@ -6,6 +6,27 @@
 {% block content %}
 <div class="container-fluid p-0">
 
+  <!-- Live Traffic & Audience Strip -->
+  <div class="p-3 bg-white rounded-4 border shadow-sm mb-4 d-flex flex-wrap gap-3 align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+      <div class="d-flex align-items-center gap-2 px-3 py-2 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-pill">
+        <span style="width:10px;height:10px;background:#10b981;border-radius:50%;display:inline-block;box-shadow:0 0 0 4px rgba(16,185,129,0.2);"></span>
+        <strong class="text-success small"><span id="home-live-count">{{ live_visitors }}</span> Customer{{ live_visitors|pluralize }} Live Online</strong>
+      </div>
+      <div class="small text-muted d-none d-md-block">
+        Today's Traffic: <strong class="text-dark">{{ today_pageviews }}</strong> Pageviews · <strong class="text-dark">{{ today_visitors }}</strong> Unique Visitors
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'dashboard:analytics' %}?period=day" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+        <i class="bi bi-clock-history me-1"></i> Today's Stats
+      </a>
+      <a href="{% url 'dashboard:analytics' %}" class="btn btn-dark btn-sm rounded-pill px-3 fw-bold">
+        <i class="bi bi-graph-up-arrow text-warning me-1"></i> View Full Traffic Analytics →
+      </a>
+    </div>
+  </div>
+
   <!-- Metrics Grid -->
   <div class="row g-3 mb-4">
 
@@ -81,8 +102,8 @@
       <a href="{% url 'dashboard:category_add' %}" class="btn btn-dark btn-sm">
         <i class="bi bi-folder-plus me-1"></i> Add Category
       </a>
-      <a href="{% url 'dashboard:banner_add' %}" class="btn btn-outline-dark btn-sm">
-        <i class="bi bi-image me-1"></i> New Promo Banner
+      <a href="{% url 'dashboard:analytics' %}" class="btn btn-outline-dark btn-sm">
+        <i class="bi bi-graph-up-arrow text-primary me-1"></i> Traffic Analytics & Rankings
       </a>
       <a href="{% url 'dashboard:settings' %}" class="btn btn-outline-dark btn-sm">
         <i class="bi bi-whatsapp text-success me-1"></i> WhatsApp Settings
@@ -174,4 +195,21 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function refreshHomeLiveCounter() {
+    fetch("{% url 'dashboard:api_live_visitors' %}")
+      .then(res => res.json())
+      .then(data => {
+        const span = document.getElementById('home-live-count');
+        const sidebar = document.getElementById('sidebar-live-count');
+        if (span) span.textContent = data.live_visitors;
+        if (sidebar) sidebar.textContent = `${data.live_visitors} Live`;
+      })
+      .catch(() => {});
+  }
+  setInterval(refreshHomeLiveCounter, 10000);
+</script>
 {% endblock %}

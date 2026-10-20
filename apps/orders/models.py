@@ -22,9 +22,11 @@ class Order(models.Model):
         (STATUS_CANCELLED, "Cancelled"),
     ]
 
+    PAYMENT_WHATSAPP = "whatsapp"
     PAYMENT_COD = "cod"
     PAYMENT_UPI = "upi"
     PAYMENT_METHOD_CHOICES = [
+        (PAYMENT_WHATSAPP, "Order via WhatsApp"),
         (PAYMENT_COD, "Cash on Delivery (COD)"),
         (PAYMENT_UPI, "Pay via UPI / QR Code"),
     ]
@@ -54,7 +56,7 @@ class Order(models.Model):
 
     # Order details
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default=PAYMENT_COD)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default=PAYMENT_WHATSAPP)
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_UNPAID)
 
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
@@ -96,7 +98,13 @@ class Order(models.Model):
     def get_whatsapp_text(self):
         items_text = []
         for idx, item in enumerate(self.items.all(), 1):
-            items_text.append(f"{idx}. {item.product_name} x {item.quantity} = ₹{item.subtotal}")
+            variant_parts = []
+            if item.selected_size:
+                variant_parts.append(f"Size: {item.selected_size}")
+            if item.selected_color:
+                variant_parts.append(f"Color: {item.selected_color}")
+            var_str = f" [{', '.join(variant_parts)}]" if variant_parts else ""
+            items_text.append(f"{idx}. {item.product_name}{var_str} x {item.quantity} = ₹{item.subtotal}")
         items_str = "\n".join(items_text)
 
         message = (
@@ -127,6 +135,8 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name="order_items")
     product_name = models.CharField(max_length=255)
     product_sku = models.CharField(max_length=50, blank=True)
+    selected_size = models.CharField(max_length=50, blank=True, default="")
+    selected_color = models.CharField(max_length=50, blank=True, default="")
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)

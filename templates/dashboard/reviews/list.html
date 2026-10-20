@@ -76,7 +76,7 @@
                 </form>
                 {% endif %}
 
-                <form method="POST" onsubmit="return confirm('Delete review permanently?');" class="d-inline">
+                <form method="POST" data-confirm="Delete review permanently? This cannot be undone." data-confirm-title="Delete Review" data-confirm-btn="Yes, Delete" class="d-inline">
                   {% csrf_token %}
                   <input type="hidden" name="review_id" value="{{ r.id }}" />
                   <input type="hidden" name="action" value="delete" />

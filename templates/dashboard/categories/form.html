@@ -28,8 +28,49 @@
     </div>
 
     <div class="mb-3">
-      <label class="form-label fw-bold small text-muted">Bootstrap Icon Class (e.g. bi-headphones, bi-laptop, bi-award)</label>
-      {{ form.icon_class }}
+      <label class="form-label fw-bold small text-muted">Category Icon (Pre-listed or Custom)</label>
+      <div class="input-group mb-2">
+        <span class="input-group-text bg-light" id="icon-preview-box">
+          <i class="bi bi-tag fs-5 text-warning" id="icon-live-preview"></i>
+        </span>
+        {{ form.icon_class }}
+      </div>
+      <div class="small text-muted mb-2">Click any icon below to select, or enter your custom Bootstrap icon class (e.g. <code>bi-bag-heart</code>):</div>
+      
+      <!-- Pre-listed Category Icons Grid -->
+      <div class="p-3 bg-light rounded-3 border d-flex flex-wrap gap-2" id="prelisted-icons-grid" style="max-height: 160px; overflow-y: auto;">
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-tag" title="General"><i class="bi bi-tag text-warning me-1"></i>Tag</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-gender-ambiguous" title="Fashion"><i class="bi bi-gender-ambiguous text-warning me-1"></i>Fashion</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-person" title="Clothing"><i class="bi bi-person text-warning me-1"></i>Apparel</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-gem" title="Jewelry & Watches"><i class="bi bi-gem text-warning me-1"></i>Jewelry</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-watch" title="Watches"><i class="bi bi-watch text-warning me-1"></i>Watches</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-bag-check" title="Bags & Luggage"><i class="bi bi-bag-check text-warning me-1"></i>Bags</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-phone" title="Smartphones"><i class="bi bi-phone text-warning me-1"></i>Phones</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-laptop" title="Computers"><i class="bi bi-laptop text-warning me-1"></i>Laptops</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-headphones" title="Audio"><i class="bi bi-headphones text-warning me-1"></i>Headphones</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-tv" title="TV & Appliances"><i class="bi bi-tv text-warning me-1"></i>Appliances</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-camera" title="Cameras"><i class="bi bi-camera text-warning me-1"></i>Cameras</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-house-heart" title="Home & Kitchen"><i class="bi bi-house-heart text-warning me-1"></i>Home</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-heart-pulse" title="Health & Beauty"><i class="bi bi-heart-pulse text-warning me-1"></i>Beauty</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-bicycle" title="Sports & Fitness"><i class="bi bi-bicycle text-warning me-1"></i>Sports</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-basket3" title="Groceries"><i class="bi bi-basket3 text-warning me-1"></i>Groceries</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-book" title="Books & Stationery"><i class="bi bi-book text-warning me-1"></i>Books</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-controller" title="Gaming"><i class="bi bi-controller text-warning me-1"></i>Gaming</button>
+        <button type="button" class="btn btn-sm btn-white border icon-select-chip" data-icon="bi-stars" title="Accessories"><i class="bi bi-stars text-warning me-1"></i>Accessories</button>
+      </div>
+    </div>
+
+    <!-- Fashion Category Sizes Toggle -->
+    <div class="p-3 mb-3 bg-light rounded-3 border">
+      <div class="form-check">
+        {{ form.has_sizes }}
+        <label class="form-check-label small fw-bold" for="{{ form.has_sizes.id_for_label }}">
+          <i class="bi bi-scissors text-primary me-1"></i> Fashion / Apparel Category (Enable Size Selection)
+        </label>
+        <div class="form-text text-muted small ms-4">
+          Check this if products in this category require size selection (e.g. Shirts, Pants, Dresses, Kurthis, Shoes).
+        </div>
+      </div>
     </div>
 
     <div class="mb-3">
@@ -66,6 +107,34 @@
     </div>
 
   </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const iconInput = document.querySelector('input[name="icon_class"]');
+      const livePreview = document.getElementById("icon-live-preview");
+
+      function updatePreview() {
+        if (!iconInput || !livePreview) return;
+        const val = iconInput.value.trim() || "bi-tag";
+        livePreview.className = `bi ${val} fs-5 text-warning`;
+      }
+
+      if (iconInput) {
+        iconInput.addEventListener("input", updatePreview);
+        updatePreview();
+      }
+
+      document.querySelectorAll(".icon-select-chip").forEach(chip => {
+        chip.addEventListener("click", function() {
+          const icon = this.getAttribute("data-icon");
+          if (iconInput) {
+            iconInput.value = icon;
+            updatePreview();
+          }
+        });
+      });
+    });
+  </script>
 
 </div>
 {% endblock %}

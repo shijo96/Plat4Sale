@@ -174,16 +174,6 @@ def run_seed():
                 sort_order=0
             )
 
-        # Add sample reviews
-        if not prod.reviews.exists():
-            Review.objects.create(
-                user=customer,
-                product=prod,
-                rating=5,
-                title="Superb quality! Exceeded expectations",
-                comment="Ordered on Plat4Sale, delivered super fast in Kerala. The packaging and build quality are top-notch. Highly recommended!",
-                is_approved=True
-            )
     print("✓ Products and images seeded.")
 
     # 5. Hero Banner

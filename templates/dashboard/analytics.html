@@ -1,0 +1,471 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block page_title %}Website Traffic & Product Performance Analytics{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for interactive analytics graphs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  .live-pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: livePulse 1.8s infinite;
+  }
+  @keyframes livePulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+  .filter-pill {
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+  }
+  .filter-pill:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+  }
+  .filter-pill.active {
+    background: #0f172a;
+    color: #fed303;
+    border-color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+  }
+  .kpi-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  }
+  .rank-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+  }
+  .rank-1 { background: #fed303; color: #0f172a; box-shadow: 0 2px 6px rgba(254, 211, 3, 0.4); }
+  .rank-2 { background: #e2e8f0; color: #334155; }
+  .rank-3 { background: #fed7aa; color: #9a3412; }
+  .rank-other { background: #f1f5f9; color: #64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+
+  <!-- Header & Live Pulse Widget -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">
+        <i class="bi bi-graph-up-arrow text-warning me-2"></i> Website Traffic & Visitor Tracking
+      </h1>
+      <p class="text-muted small mb-0">Real-time visitor analytics, product click counts, and top-selling sales intelligence.</p>
+    </div>
+
+    <!-- Live Customer Online Indicator -->
+    <div class="d-flex align-items-center gap-2">
+      <div class="bg-white border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center gap-2">
+        <span class="live-pulse-dot"></span>
+        <span class="small text-muted fw-semibold">Live on Store:</span>
+        <strong class="text-success fs-6" id="live-visitors-badge">{{ live_visitors }} Active User{{ live_visitors|pluralize }}</strong>
+        <span class="badge bg-light text-muted border small ms-1" style="font-size:0.7rem;">Realtime (5m)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar: Day / Week / Month / Year / Custom Dates -->
+  <div class="bg-white p-3 rounded-4 border shadow-sm mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      
+      <!-- Preset Quick Pills -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="small fw-bold text-muted text-uppercase me-1" style="letter-spacing: 0.5px;">Timeframe:</span>
+        <a href="?period=day" class="filter-pill {% if period == 'day' %}active{% endif %}">
+          <i class="bi bi-calendar-event me-1"></i> Today
+        </a>
+        <a href="?period=week" class="filter-pill {% if period == 'week' %}active{% endif %}">
+          <i class="bi bi-calendar-week me-1"></i> This Week (7 Days)
+        </a>
+        <a href="?period=month" class="filter-pill {% if period == 'month' %}active{% endif %}">
+          <i class="bi bi-calendar-month me-1"></i> This Month (30 Days)
+        </a>
+        <a href="?period=year" class="filter-pill {% if period == 'year' %}active{% endif %}">
+          <i class="bi bi-calendar me-1"></i> This Year
+        </a>
+      </div>
+
+      <!-- Custom Date Range Form -->
+      <form method="GET" action="{% url 'dashboard:analytics' %}" class="d-flex align-items-center gap-2 flex-wrap">
+        <input type="hidden" name="period" value="custom">
+        <div class="input-group input-group-sm" style="width: auto;">
+          <span class="input-group-text bg-light text-muted small fw-semibold">From</span>
+          <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}" required>
+        </div>
+        <div class="input-group input-group-sm" style="width: auto;">
+          <span class="input-group-text bg-light text-muted small fw-semibold">To</span>
+          <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}" required>
+        </div>
+        <button type="submit" class="btn btn-sm btn-dark px-3 fw-bold">
+          <i class="bi bi-filter me-1"></i> Apply
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- KPI Metrics Grid -->
+  <div class="row g-3 mb-4">
+    
+    <!-- Live Customers -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">LIVE CUSTOMERS</span>
+          <div class="metric-icon-wrap bg-success bg-opacity-10 text-success">
+            <i class="bi bi-broadcast"></i>
+          </div>
+        </div>
+        <div class="display-6 fw-bold text-success mb-1" id="kpi-live-count">{{ live_visitors }}</div>
+        <span class="small text-muted"><span class="live-pulse-dot me-1"></span> Active on website right now</span>
+      </div>
+    </div>
+
+    <!-- Total Pageviews in period -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">PAGEVIEWS (TRAFFIC)</span>
+          <div class="metric-icon-wrap bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-eye"></i>
+          </div>
+        </div>
+        <div class="display-6 fw-bold text-dark mb-1">{{ total_pageviews }}</div>
+        <span class="small text-muted">Total page visits in <strong>{{ period_title }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Unique Customers / Visitors -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">UNIQUE VISITORS</span>
+          <div class="metric-icon-wrap bg-info bg-opacity-10 text-info">
+            <i class="bi bi-people"></i>
+          </div>
+        </div>
+        <div class="display-6 fw-bold text-dark mb-1">{{ unique_visitors }}</div>
+        <span class="small text-muted">Distinct customer sessions in <strong>{{ period_title }}</strong></span>
+      </div>
+    </div>
+
+    <!-- Product Clicks -->
+    <div class="col-sm-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">PRODUCT CLICKS</span>
+          <div class="metric-icon-wrap bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-cursor-fill"></i>
+          </div>
+        </div>
+        <div class="display-6 fw-bold text-dark mb-1">{{ total_clicks }}</div>
+        <span class="small text-muted">{{ total_orders }} orders placed in period</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Traffic Timeline Chart -->
+  <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <div>
+        <h2 class="h5 fw-bold mb-0">Visitor & Traffic Timeline ({{ period_title }})</h2>
+        <span class="text-muted small">Daily breakdown of total pageviews vs unique customer sessions</span>
+      </div>
+      <div class="d-flex gap-3 small">
+        <span class="d-flex align-items-center gap-1"><span style="width:12px;height:12px;background:#3b82f6;border-radius:3px;"></span> Pageviews</span>
+        <span class="d-flex align-items-center gap-1"><span style="width:12px;height:12px;background:#10b981;border-radius:3px;"></span> Unique Visitors</span>
+      </div>
+    </div>
+    <div style="height: 280px; width: 100%;">
+      <canvas id="trafficChart"></canvas>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    <!-- 1. Top Clicked / Most Viewed Products Table -->
+    <div class="col-xl-6">
+      <div class="bg-white p-4 rounded-4 border shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-0">
+              <i class="bi bi-fire text-danger me-1"></i> Most Clicked / Viewed Products
+            </h2>
+            <span class="text-muted small">Ranked by customer click rate and popularity</span>
+          </div>
+          <span class="badge bg-warning text-dark fw-bold px-2 py-1 small">Clicks Ranking</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>Product</th>
+                <th>Price</th>
+                <th class="text-center">Clicks</th>
+                <th class="text-center">Orders</th>
+                <th class="text-end">Conversion</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in top_clicked_list %}
+              <tr>
+                <td>
+                  <span class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                    {{ forloop.counter }}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    {% if item.product.primary_image %}
+                      <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 38px; height: 38px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
+                    {% else %}
+                      <img src="{% static 'images/logo.jpg' %}" alt="Placeholder" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px;" />
+                    {% endif %}
+                    <div>
+                      <a href="{{ item.product.get_absolute_url }}" target="_blank" class="fw-bold text-dark text-decoration-none small d-block text-truncate" style="max-width: 170px;">
+                        {{ item.product.name }}
+                      </a>
+                      <span class="text-muted" style="font-size: 0.72rem;">{{ item.product.category.name }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="fw-bold small text-dark">₹{{ item.product.current_price }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1">
+                    <i class="bi bi-cursor-fill me-1"></i>{{ item.period_clicks|default:item.total_views }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="small fw-bold text-dark">{{ item.orders_count }}</span>
+                </td>
+                <td class="text-end">
+                  <span class="badge {% if item.conversion_rate >= 10 %}bg-success-subtle text-success{% elif item.conversion_rate > 0 %}bg-warning-subtle text-dark{% else %}bg-light text-muted{% endif %} fw-bold px-2 py-1">
+                    {{ item.conversion_rate }}%
+                  </span>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted small">No product clicks recorded yet in this timeframe.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 2. Top Selling / Most Ordered Products Table -->
+    <div class="col-xl-6">
+      <div class="bg-white p-4 rounded-4 border shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-0">
+              <i class="bi bi-trophy-fill text-warning me-1"></i> Most Ordered / Best Sellers
+            </h2>
+            <span class="text-muted small">
+              Ranked from highest orders to lowest in selected timeframe
+            </span>
+          </div>
+          <span class="badge bg-success text-white fw-bold px-2 py-1 small">Sales Leaderboard</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase">
+              <tr>
+                <th style="width: 40px;">#</th>
+                <th>Product</th>
+                <th class="text-center">Sold Units</th>
+                <th class="text-center">Orders</th>
+                <th class="text-end">Revenue</th>
+                <th class="text-center">Stock</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in top_ordered_products %}
+              <tr>
+                <td>
+                  <span class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+                    {{ forloop.counter }}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    {% if p.primary_image %}
+                      <img src="{{ p.primary_image.image.url }}" alt="{{ p.name }}" style="width: 38px; height: 38px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
+                    {% else %}
+                      <img src="{% static 'images/logo.jpg' %}" alt="Placeholder" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px;" />
+                    {% endif %}
+                    <div>
+                      <a href="{{ p.get_absolute_url }}" target="_blank" class="fw-bold text-dark text-decoration-none small d-block text-truncate" style="max-width: 170px;">
+                        {{ p.name }}
+                      </a>
+                      <span class="text-muted" style="font-size: 0.72rem;">SKU: {{ p.sku }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-success text-white fw-bold px-2 py-1 fs-6">
+                    {{ p.ordered_units }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span class="small fw-bold text-dark">{{ p.order_count }}</span>
+                </td>
+                <td class="text-end fw-bold text-dark small">
+                  ₹{{ p.revenue|default:"0" }}
+                </td>
+                <td class="text-center">
+                  {% if p.stock > 5 %}
+                    <span class="badge bg-success-subtle text-success small">{{ p.stock }}</span>
+                  {% elif p.stock > 0 %}
+                    <span class="badge bg-danger-subtle text-danger small">{{ p.stock }} low</span>
+                  {% else %}
+                    <span class="badge bg-secondary small">Out</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted small">No orders recorded in this timeframe yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Render Chart.js traffic graph
+  const ctx = document.getElementById('trafficChart');
+  if (ctx) {
+    const dates = {{ chart_dates_json|safe }};
+    const pageviews = {{ chart_pv_json|safe }};
+    const uniques = {{ chart_uv_json|safe }};
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          {
+            label: 'Pageviews',
+            data: pageviews,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.08)',
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 4,
+          },
+          {
+            label: 'Unique Visitors',
+            data: uniques,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.04)',
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 4,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            titleFont: { size: 13, weight: 'bold' },
+            padding: 10,
+            cornerRadius: 8,
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11, family: 'sans-serif' } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f1f5f9' },
+            ticks: { precision: 0, font: { size: 11, family: 'sans-serif' } }
+          }
+        }
+      }
+    });
+  }
+
+  // Periodic polling for live visitor updates every 10 seconds
+  function updateLiveVisitors() {
+    fetch("{% url 'dashboard:api_live_visitors' %}")
+      .then(res => res.json())
+      .then(data => {
+        const badge = document.getElementById('live-visitors-badge');
+        const kpi = document.getElementById('kpi-live-count');
+        const sidebar = document.getElementById('sidebar-live-count');
+        if (badge) {
+          badge.textContent = `${data.live_visitors} Active User${data.live_visitors > 1 ? 's' : ''}`;
+        }
+        if (kpi) {
+          kpi.textContent = data.live_visitors;
+        }
+        if (sidebar) {
+          sidebar.textContent = `${data.live_visitors} Live`;
+        }
+      })
+      .catch(() => {});
+  }
+  setInterval(updateLiveVisitors, 10000);
+</script>
+{% endblock %}

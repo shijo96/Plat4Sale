@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib import messages
 from apps.catalog.models import Product
@@ -19,6 +20,8 @@ def _get_or_create_cart(request):
 
 
 def cart_detail_view(request):
+    # Clear any lingering Buy Now session so checkout from cart includes all cart items
+    request.session.pop("buy_now_data", None)
     cart = _get_or_create_cart(request)
     settings = StoreSettings.get_settings()
     free_shipping_threshold = settings.free_shipping_threshold
@@ -41,11 +44,27 @@ def cart_detail_view(request):
 def add_to_cart_view(request, product_id):
     product = get_object_or_404(Product, id=product_id, is_active=True)
 
-    if not product.in_stock:
+    if not product.in_stock or product.stock <= 0:
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return JsonResponse({"success": False, "message": "This product is currently out of stock."}, status=400)
+            return JsonResponse({"success": False, "message": "Sorry, this product is out of stock."}, status=400)
         messages.error(request, f"Sorry, '{product.name}' is out of stock.")
         return redirect(request.META.get("HTTP_REFERER", "catalog:product_list"))
+
+    # Extract size and color
+    selected_size = request.POST.get("size", "").strip()
+    selected_color = request.POST.get("color", "").strip()
+
+    # If product has sizes available and none selected, prompt user
+    if product.sizes_list and not selected_size:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": False,
+                "needs_options": True,
+                "redirect_url": product.get_absolute_url(),
+                "message": "Please choose a size on the product page."
+            }, status=400)
+        messages.warning(request, "Please select an available size before adding to cart.")
+        return redirect(product.get_absolute_url())
 
     try:
         quantity = int(request.POST.get("quantity", 1))
@@ -54,20 +73,48 @@ def add_to_cart_view(request, product_id):
     except ValueError:
         quantity = 1
 
+    # Strict stock limitation check: customer quantity CANNOT exceed available stock
+    if quantity > product.stock:
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": False,
+                "message": f"Requested quantity exceeds available stock ({product.stock} units available)."
+            }, status=400)
+        messages.error(request, f"Cannot order {quantity} units. Only {product.stock} units are currently in stock.")
+        return redirect(product.get_absolute_url())
+
+    # Check if this is a direct "Buy Now" action: checkout only this product, keep cart untouched
+    if request.POST.get("buy_now") == "1":
+        request.session["buy_now_data"] = {
+            "product_id": product.id,
+            "quantity": quantity,
+            "selected_size": selected_size,
+            "selected_color": selected_color,
+        }
+        return redirect(f"{reverse('orders:checkout')}?buy_now=1")
+
     cart = _get_or_create_cart(request)
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    cart_item, created = CartItem.objects.get_or_create(
+        cart=cart,
+        product=product,
+        selected_size=selected_size,
+        selected_color=selected_color,
+        defaults={"quantity": min(quantity, product.stock)}
+    )
 
     if not created:
         if cart_item.quantity + quantity > product.stock:
-            if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                return JsonResponse({"success": False, "message": f"Only {product.stock} items available in stock."}, status=400)
-            messages.warning(request, f"Cannot add more. Only {product.stock} units in stock.")
-            return redirect("cart:cart_detail")
-        cart_item.quantity += quantity
-    else:
-        cart_item.quantity = min(quantity, product.stock)
-
-    cart_item.save()
+            max_add = product.stock - cart_item.quantity
+            if max_add <= 0:
+                msg = f"You already have all {product.stock} available units of '{product.name}' in your cart."
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"success": False, "message": msg, "already_max": True}, status=400)
+                messages.warning(request, msg)
+                return redirect("cart:cart_detail")
+            cart_item.quantity = product.stock
+        else:
+            cart_item.quantity += quantity
+        cart_item.save()
 
     is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest" or request.GET.get("format") == "json"
     if is_ajax:
@@ -77,12 +124,12 @@ def add_to_cart_view(request, product_id):
             "cart_count": cart.total_items,
             "cart_subtotal": str(cart.subtotal),
             "item_quantity": cart_item.quantity,
+            "product_id": product.id,
+            "in_cart": True,
         })
 
     messages.success(request, f"'{product.name}' added to your Cart!")
-    if request.POST.get("buy_now") == "1":
-        return redirect("orders:checkout")
-    return redirect(request.META.get("HTTP_REFERER", "cart:cart_detail"))
+    return redirect("cart:cart_detail")
 
 
 def update_cart_item_view(request, item_id):
@@ -90,14 +137,13 @@ def update_cart_item_view(request, item_id):
     item = get_object_or_404(CartItem, id=item_id, cart=cart)
 
     action = request.POST.get("action")
-    new_qty = None
 
     if action == "increase":
         if item.quantity < item.product.stock:
             item.quantity += 1
             item.save()
         else:
-            messages.warning(request, f"Maximum available stock is {item.product.stock}.")
+            messages.warning(request, f"Cannot add more. Maximum available stock is {item.product.stock} units.")
     elif action == "decrease":
         if item.quantity > 1:
             item.quantity -= 1
@@ -109,7 +155,11 @@ def update_cart_item_view(request, item_id):
         try:
             qty = int(request.POST.get("quantity", 1))
             if qty > 0:
-                item.quantity = min(qty, item.product.stock)
+                if qty > item.product.stock:
+                    messages.warning(request, f"Capped to maximum available stock ({item.product.stock} units).")
+                    item.quantity = item.product.stock
+                else:
+                    item.quantity = qty
                 item.save()
             else:
                 item.delete()

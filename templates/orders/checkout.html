@@ -6,12 +6,28 @@
 {% block content %}
 <div class="container my-4">
 
-  <h1 class="h3 fw-bold mb-4">
-    <i class="bi bi-shield-lock-fill text-warning me-2"></i> Secure Checkout
-  </h1>
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <h1 class="h3 fw-bold mb-0">
+      {% if is_buy_now %}
+        <i class="bi bi-lightning-charge-fill text-warning me-2"></i> Instant Buy Now Checkout
+      {% else %}
+        <i class="bi bi-shield-lock-fill text-warning me-2"></i> Secure Cart Checkout
+      {% endif %}
+    </h1>
+    {% if is_buy_now %}
+      <span class="badge bg-warning-subtle text-dark border border-warning px-3 py-2 rounded-pill small fw-bold">
+        <i class="bi bi-info-circle me-1"></i> Direct 1-Item Purchase (Cart items kept safe)
+      </span>
+    {% else %}
+      <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill small">
+        All Cart Products ({{ cart_items|length }})
+      </span>
+    {% endif %}
+  </div>
 
   <form method="POST" action="{% url 'orders:checkout' %}" id="checkout-form">
     {% csrf_token %}
+    <input type="hidden" name="is_buy_now" value="{% if is_buy_now %}1{% else %}0{% endif %}" />
 
     <div class="row g-4">
 
@@ -122,14 +138,34 @@
 
         </div>
 
-        <!-- STEP 2: Payment Method -->
+        <!-- STEP 2: Payment & Order Confirmation Method -->
         <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
           <div class="d-flex align-items-center gap-2 mb-3">
-            <span class="badge bg-warning text-dark fs-6 rounded-pill">2</span>
-            <h2 class="h5 fw-bold mb-0">Select Payment Method</h2>
+            <span class="badge {% if store.whatsapp_only_orders %}bg-success text-white{% else %}bg-warning text-dark{% endif %} fs-6 rounded-pill">2</span>
+            <h2 class="h5 fw-bold mb-0">{% if store.whatsapp_only_orders %}Order Mode: WhatsApp Ordering{% else %}Select Payment Method{% endif %}</h2>
           </div>
 
+          {% if store.whatsapp_only_orders %}
+          <div class="p-4 border rounded-3" style="background: #f0fdf4; border-color: #86efac !important;">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm text-white" style="width: 52px; height: 52px; background-color: #25D366; flex-shrink: 0;">
+                <i class="bi bi-whatsapp fs-3"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="hidden" name="payment_method" value="whatsapp" />
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="fw-bold text-dark fs-6">Official WhatsApp Direct Order</span>
+                  <span class="badge bg-success small">Active</span>
+                </div>
+                <div class="text-secondary small">
+                  Your complete order slip with shipping address, selected product variants, and total amount will be sent instantly to our WhatsApp store (<strong>{{ store.whatsapp_number|default:store.support_phone }}</strong>) for immediate confirmation and fast dispatch.
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
           <div class="row g-3">
+            {% if store.cod_enabled %}
             <div class="col-md-6">
               <label class="p-3 border rounded-3 d-block h-100 bg-light" style="cursor: pointer;">
                 <div class="form-check">
@@ -141,19 +177,31 @@
                 </div>
               </label>
             </div>
+            {% endif %}
 
+            {% if store.online_payment_enabled %}
             <div class="col-md-6">
-              <label class="p-3 border rounded-3 d-block h-100" style="cursor: pointer;">
+              <label class="p-3 border rounded-3 d-block h-100 bg-light" style="cursor: pointer;">
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="payment_method" value="upi" id="pay_upi" />
+                  <input class="form-check-input" type="radio" name="payment_method" value="upi" id="pay_upi" {% if not store.cod_enabled %}checked{% endif %} />
                   <div class="form-check-label ms-1">
-                    <div class="fw-bold text-dark"><i class="bi bi-qr-code-scan text-primary me-1"></i> Pay via UPI / WhatsApp</div>
-                    <div class="small text-muted mt-1">Pay via Google Pay, PhonePe, Paytm, or scan QR code via WhatsApp chat.</div>
+                    <div class="fw-bold text-dark"><i class="bi bi-qr-code-scan text-primary me-1"></i> Pay via UPI / Online</div>
+                    <div class="small text-muted mt-1">Instant payment via Google Pay, PhonePe, Paytm, or direct UPI transfer.</div>
                   </div>
                 </div>
               </label>
             </div>
+            {% endif %}
+
+            {% if not store.cod_enabled and not store.online_payment_enabled %}
+            <div class="col-12">
+              <div class="alert alert-warning mb-0">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Online checkout is currently undergoing maintenance. Please complete your order directly on WhatsApp.
+              </div>
+            </div>
+            {% endif %}
           </div>
+          {% endif %}
         </div>
 
         <!-- Optional Order Notes -->
@@ -174,10 +222,16 @@
             {% for item in cart_items %}
             <div class="d-flex align-items-center gap-2 mb-2 pb-2 border-bottom">
               {% if item.product.primary_image %}
-              <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
+              <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.name }}" style="width: 44px; height: 44px; object-fit: contain; border-radius: 6px; background: #f8fafc;" />
               {% endif %}
               <div class="flex-grow-1 small">
                 <div class="fw-bold text-truncate" style="max-width: 170px;">{{ item.product.name }}</div>
+                {% if item.selected_size or item.selected_color %}
+                <div class="text-muted" style="font-size:0.75rem;">
+                  {% if item.selected_size %}Size: <strong>{{ item.selected_size }}</strong>{% endif %}
+                  {% if item.selected_color %} · Color: <strong>{{ item.selected_color }}</strong>{% endif %}
+                </div>
+                {% endif %}
                 <div class="text-muted">Qty: {{ item.quantity }} × ₹{{ item.unit_price }}</div>
               </div>
               <span class="fw-bold small text-dark">₹{{ item.subtotal }}</span>
@@ -188,15 +242,15 @@
           <!-- Totals -->
           <div class="d-flex justify-content-between mb-2 small">
             <span class="text-muted">Subtotal:</span>
-            <span class="fw-bold">₹{{ cart.subtotal }}</span>
+            <span class="fw-bold">₹{{ subtotal }}</span>
           </div>
 
           <div class="d-flex justify-content-between mb-3 small">
             <span class="text-muted">Shipping Fee:</span>
-            {% if cart.shipping_fee == 0 %}
+            {% if shipping_fee == 0 %}
               <span class="badge bg-success-subtle text-success fw-bold">FREE</span>
             {% else %}
-              <span class="fw-bold">₹{{ cart.shipping_fee }}</span>
+              <span class="fw-bold">₹{{ shipping_fee }}</span>
             {% endif %}
           </div>
 
@@ -204,9 +258,19 @@
 
           <div class="d-flex justify-content-between align-items-baseline mb-4">
             <span class="h6 fw-bold mb-0">Total Payable:</span>
-            <span class="h3 fw-bold text-dark mb-0">₹{{ cart.total_amount }}</span>
+            <span class="h3 fw-bold text-dark mb-0">₹{{ total_amount }}</span>
           </div>
 
+          {% if store.whatsapp_only_orders %}
+          <button type="submit" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3 fs-6">
+            <i class="bi bi-whatsapp fs-5"></i> Place Order via WhatsApp
+          </button>
+
+          <div class="text-center small text-muted">
+            <i class="bi bi-shield-check text-success me-1"></i>
+            Instant order confirmation & slip generation via WhatsApp.
+          </div>
+          {% else %}
           <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3">
             <i class="bi bi-check2-circle fs-5"></i> Confirm & Place Order
           </button>
@@ -215,6 +279,7 @@
             <i class="bi bi-whatsapp text-success me-1"></i>
             After placing order, you can confirm directly on WhatsApp with 1-click.
           </div>
+          {% endif %}
 
         </div>
       </div>

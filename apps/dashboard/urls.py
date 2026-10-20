@@ -6,12 +6,15 @@ app_name = "dashboard"
 urlpatterns = [
     # Dashboard Home
     path("", views.dashboard_home, name="home"),
+    path("analytics/", views.analytics_view, name="analytics"),
+    path("api/live-visitors/", views.api_live_visitors, name="api_live_visitors"),
 
     # Products
     path("products/", views.product_list_view, name="product_list"),
     path("products/add/", views.product_add_view, name="product_add"),
     path("products/<int:pk>/edit/", views.product_edit_view, name="product_edit"),
     path("products/<int:pk>/delete/", views.product_delete_view, name="product_delete"),
+    path("products/<int:pk>/media/<int:media_id>/delete/", views.product_media_delete_view, name="product_media_delete"),
 
     # Categories
     path("categories/", views.category_list_view, name="category_list"),

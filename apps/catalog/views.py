@@ -1,9 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-from django.db.models import Q, Avg, Count
+from django.db.models import Q, Avg, Count, F
+from django.db import models
 from django.http import JsonResponse
-from .models import Category, Product, Banner
+from django.utils import timezone
+from datetime import timedelta
+from django.views.decorators.csrf import csrf_exempt
+from .models import Category, Product, Banner, ProductClick
 from apps.reviews.models import Review
+from apps.core.middleware import get_client_ip
 
 
 def home_view(request):
@@ -205,3 +210,37 @@ def search_suggest_api(request):
             "image": img_url,
         })
     return JsonResponse({"results": results})
+
+
+@csrf_exempt
+def track_product_click_api(request, product_id):
+    """
+    Records a click on a product card or link from anywhere in the store.
+    Increments views_count and saves a timestamped ProductClick record.
+    """
+    product = get_object_or_404(Product, id=product_id, is_active=True)
+    if request.user.is_authenticated and request.user.is_staff:
+        return JsonResponse({"status": "ignored_staff", "product_id": product.id, "views": product.views_count})
+
+    session_key = request.session.session_key or "anonymous"
+    ip = get_client_ip(request)
+    user = request.user if request.user.is_authenticated else None
+    now = timezone.now()
+
+    # Deduplicate rapid clicks within 30 seconds
+    recent_click = ProductClick.objects.filter(
+        product=product,
+        session_key=session_key,
+        timestamp__gte=now - timedelta(seconds=30),
+    ).exists()
+
+    if not recent_click:
+        ProductClick.objects.create(
+            product=product,
+            session_key=session_key,
+            user=user,
+            ip_address=ip,
+        )
+        Product.objects.filter(id=product.id).update(views_count=models.F("views_count") + 1)
+
+    return JsonResponse({"status": "success", "product_id": product.id, "views": product.views_count + 1})

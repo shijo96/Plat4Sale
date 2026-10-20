@@ -246,19 +246,81 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   transform: translateY(-1px);
 }
 
-/* Category Ribbon Sub-bar */
+/* Category Ribbon Sub-bar - Unclipped dropdown */
 .category-ribbon {
   background-color: #232F3E;
   padding: 6px 0;
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1040;
 }
 
-.category-ribbon::-webkit-scrollbar {
+.department-dropdown-wrap {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1060;
+}
+
+.ribbon-dept-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.ribbon-dept-btn:hover,
+.ribbon-dept-btn[aria-expanded="true"] {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  border-color: var(--plat-yellow);
+}
+
+.department-dropdown-menu {
+  min-width: 270px;
+  max-height: 480px;
+  overflow-y: auto;
+  z-index: 1090 !important;
+  border-radius: 10px;
+  margin-top: 8px !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.25) !important;
+  border: 1px solid #E2E8F0 !important;
+}
+
+.department-dropdown-menu .dropdown-item {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1E293B;
+  transition: background-color 0.15s ease, padding-left 0.15s ease;
+}
+
+.department-dropdown-menu .dropdown-item:hover {
+  background-color: #FFFBEB;
+  color: #B45309;
+  padding-left: 1.25rem !important;
+}
+
+.ribbon-categories-scroll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  white-space: nowrap;
+  flex-grow: 1;
+  padding: 2px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ribbon-categories-scroll::-webkit-scrollbar {
   height: 3px;
 }
-.category-ribbon::-webkit-scrollbar-thumb {
-  background: var(--plat-yellow);
+.ribbon-categories-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 3px;
 }
 
 .ribbon-link {
@@ -272,6 +334,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .ribbon-link:hover, .ribbon-link.active {
@@ -282,6 +345,134 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .ribbon-link.deals-link {
   color: var(--plat-yellow);
   font-weight: 700;
+}
+
+/* In-Cart Button Dynamic Styling */
+.btn-in-cart {
+  background: #059669 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: 1px solid #047857 !important;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.btn-in-cart:hover {
+  background: #047857 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+/* Low Stock Indicators */
+.stock-badge-low {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  animation: pulseLowStock 2s infinite;
+}
+
+@keyframes pulseLowStock {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.82; transform: scale(0.99); }
+}
+
+.stock-badge-in {
+  color: #059669;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Variant Selector Pills (Size & Color) */
+.variant-pills-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.variant-pill-label {
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 0;
+}
+
+.variant-pill-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.variant-pill-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #334155;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.variant-pill-label:hover .variant-pill-box {
+  border-color: #F59E0B;
+  color: #0F172A;
+}
+
+.variant-pill-input:checked + .variant-pill-box {
+  border-color: #F59E0B;
+  background-color: #FFFBEB;
+  color: #B45309;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.variant-color-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.variant-pill-label:hover .variant-color-box {
+  border-color: #2563EB;
+}
+
+.variant-pill-input:checked + .variant-color-box {
+  border-color: #2563EB;
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
 }
 
 /* Hero Carousel */
@@ -915,3 +1106,502 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .mobile-nav-item.active, .mobile-nav-item:hover {
   color: var(--plat-orange);
 }
+
+/* ==========================================================================
+   ULTRA-PREMIUM SWEETALERT2 STYLING SYSTEM (NATIVE COMPATIBLE)
+   ========================================================================== */
+
+/* Frosted glass backdrop overlay - strictly for modal dialogs (confirmations/prompts) */
+.swal2-container.swal2-backdrop-show:not(.swal2-top):not(.swal2-top-start):not(.swal2-top-end):not(.swal2-top-left):not(.swal2-top-right):not(.swal2-bottom):not(.swal2-bottom-start):not(.swal2-bottom-end):not(.swal2-bottom-left):not(.swal2-bottom-right):not(.swal2-toast-shown):not(:has(.swal2-toast)) {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(6px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(140%) !important;
+  pointer-events: auto !important;
+}
+
+/* Toast Container: 100% transparent, ZERO blur, non-blocking */
+.swal2-container.swal2-toast-shown,
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top,
+.swal2-container.swal2-top-start,
+.swal2-container.swal2-bottom-end,
+.swal2-container.swal2-bottom,
+.swal2-container.swal2-bottom-start,
+.swal2-container:has(.swal2-toast),
+body.swal2-toast-shown .swal2-container {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+.swal2-container.swal2-top-end {
+  padding: 18px 22px !important;
+}
+
+/* Modal Popup Card */
+.swal2-popup:not(.swal2-toast) {
+  border-radius: 24px !important;
+  padding: 34px 26px 28px !important;
+  background: #ffffff !important;
+  background: radial-gradient(120% 120% at 50% 0%, #FFFFFF 50%, #F8FAFC 100%) !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 25px 60px -10px rgba(15, 23, 42, 0.4), 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  max-width: 440px !important;
+  width: 92% !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* Modal Title */
+.swal2-popup:not(.swal2-toast) .swal2-title {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.55rem !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  letter-spacing: -0.025em !important;
+  margin: 6px 0 10px 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+}
+
+/* Modal Body Text */
+.swal2-popup:not(.swal2-toast) .swal2-html-container {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.96rem !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+  color: #64748B !important;
+  margin: 0 auto 4px !important;
+  padding: 0 4px !important;
+  max-width: 360px !important;
+}
+
+/* Modal Icons */
+.swal2-popup:not(.swal2-toast) .swal2-icon {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 20px !important;
+  margin: 0 auto 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-warning {
+  border-color: #FCD34D !important;
+  background: radial-gradient(circle at 50% 30%, #FFFBEB 0%, #FEF3C7 100%) !important;
+  color: #D97706 !important;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.12) !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-warning .swal2-icon-content {
+  color: #D97706 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 2.4rem !important;
+  line-height: 1 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-error {
+  border-color: #FCA5A5 !important;
+  background: radial-gradient(circle at 50% 30%, #FEF2F2 0%, #FEE2E2 100%) !important;
+  color: #DC2626 !important;
+  box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.12) !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-error .swal2-icon-content {
+  color: #DC2626 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 2.2rem !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-success {
+  border-color: #86EFAC !important;
+  background: radial-gradient(circle at 50% 30%, #ECFDF5 0%, #D1FAE5 100%) !important;
+  color: #059669 !important;
+  box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.12) !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-icon.swal2-info {
+  border-color: #93C5FD !important;
+  background: radial-gradient(circle at 50% 30%, #EFF6FF 0%, #DBEAFE 100%) !important;
+  color: #2563EB !important;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Modal Actions Layout */
+.swal2-popup:not(.swal2-toast) .swal2-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin-top: 24px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Base Buttons */
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 12px !important;
+  min-height: 46px !important;
+  padding: 12px 22px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+
+/* Crucial: keep unconfigured SweetAlert buttons (like swal2-deny) strictly hidden */
+.swal2-actions button[style*="display: none"],
+.swal2-actions button[style*="display:none"],
+.swal2-actions button.swal2-hide {
+  display: none !important;
+}
+
+/* Cancel Button */
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-cancel {
+  background: #F1F5F9 !important;
+  color: #475569 !important;
+  border: 1.5px solid #CBD5E1 !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04) !important;
+  flex: 1 1 0 !important;
+  max-width: 160px !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-cancel:hover {
+  background: #E2E8F0 !important;
+  color: #0F172A !important;
+  border-color: #94A3B8 !important;
+  transform: translateY(-1.5px) !important;
+}
+
+/* Confirm Button (Default Gold/Amber) */
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-confirm {
+  background: linear-gradient(135deg, #FED303 0%, #FF9900 100%) !important;
+  color: #0F172A !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 6px 18px rgba(254, 211, 3, 0.45) !important;
+  flex: 1.2 1 0 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-confirm:hover {
+  background: linear-gradient(135deg, #FFDE33 0%, #FF8800 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 24px rgba(254, 211, 3, 0.6) !important;
+}
+
+/* Danger Confirm Button (For Deletion / Destruction) */
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-confirm.swal2-danger,
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.plat-btn-danger {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45) !important;
+  flex: 1.2 1 0 !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-confirm.swal2-danger:hover,
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.plat-btn-danger:hover {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.6) !important;
+}
+
+/* Deny Button (When Deny/No is active) */
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-deny {
+  background: #64748B !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 12px !important;
+  min-height: 46px !important;
+  padding: 12px 20px !important;
+  flex: 1 1 0 !important;
+  max-width: 140px !important;
+}
+.swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled.swal2-deny:hover {
+  background: #475569 !important;
+  transform: translateY(-1.5px) !important;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .swal2-popup:not(.swal2-toast) {
+    width: 94% !important;
+    padding: 26px 18px 22px !important;
+    border-radius: 20px !important;
+  }
+  .swal2-popup:not(.swal2-toast) .swal2-title {
+    font-size: 1.35rem !important;
+  }
+  .swal2-popup:not(.swal2-toast) .swal2-html-container {
+    font-size: 0.9rem !important;
+  }
+  .swal2-popup:not(.swal2-toast) .swal2-icon {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 18px !important;
+    margin-bottom: 12px !important;
+  }
+  .swal2-popup:not(.swal2-toast) .swal2-actions {
+    flex-direction: column-reverse !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .swal2-popup:not(.swal2-toast) .swal2-actions button.swal2-styled {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+}
+
+/* ==========================================================================
+   SIMPLE, NEAT & STYLISH MODERN TOAST NOTIFICATIONS
+   ========================================================================== */
+
+@keyframes platToastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.swal2-popup.swal2-toast {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: auto !important;
+  min-width: 290px !important;
+  max-width: 440px !important;
+  min-height: 48px !important;
+  padding: 10px 16px !important;
+  margin: 6px 0 !important;
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12),
+              0 4px 10px -2px rgba(15, 23, 42, 0.04),
+              0 0 0 1px rgba(15, 23, 42, 0.03) !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  animation: platToastSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.swal2-popup.swal2-toast:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.16),
+              0 6px 14px -2px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Toast Icon - Compact, crisp & perfectly aligned */
+.swal2-popup.swal2-toast .swal2-icon {
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  max-height: 24px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  border-width: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+/* Success Icon */
+.swal2-popup.swal2-toast .swal2-icon.swal2-success {
+  border-color: #10B981 !important;
+  background: #ECFDF5 !important;
+  color: #059669 !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-circular-line-left,
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-circular-line-right,
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-fix,
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-ring {
+  display: none !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-tip {
+  top: 11px !important;
+  left: 4px !important;
+  width: 6px !important;
+  height: 2px !important;
+  border-radius: 1px !important;
+  background-color: #059669 !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-success .swal2-success-line-long {
+  top: 9px !important;
+  right: 4px !important;
+  width: 11px !important;
+  height: 2px !important;
+  border-radius: 1px !important;
+  background-color: #059669 !important;
+}
+
+/* Error / Danger Icon */
+.swal2-popup.swal2-toast .swal2-icon.swal2-error {
+  border-color: #EF4444 !important;
+  background: #FEF2F2 !important;
+  color: #DC2626 !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark-line-left,
+.swal2-popup.swal2-toast .swal2-icon.swal2-error .swal2-x-mark-line-right {
+  position: absolute !important;
+  top: 9px !important;
+  left: 4px !important;
+  width: 12px !important;
+  height: 2px !important;
+  border-radius: 1px !important;
+  background-color: #DC2626 !important;
+}
+
+/* Warning Icon */
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning {
+  border-color: #F59E0B !important;
+  background: #FFFBEB !important;
+  color: #D97706 !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning .swal2-icon-content {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  line-height: 1 !important;
+  color: #D97706 !important;
+}
+
+/* Info Icon */
+.swal2-popup.swal2-toast .swal2-icon.swal2-info {
+  border-color: #3B82F6 !important;
+  background: #EFF6FF !important;
+  color: #2563EB !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-info .swal2-icon-content {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 0.9rem !important;
+  line-height: 1 !important;
+  color: #2563EB !important;
+}
+
+/* Toast Title & Text */
+.swal2-popup.swal2-toast .swal2-title {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #0F172A !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 1 1 auto !important;
+  text-align: left !important;
+  letter-spacing: -0.01em !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  color: #475569 !important;
+  margin: 2px 0 0 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+/* Toast Progress Bar */
+.swal2-popup.swal2-toast .swal2-timer-progress-bar-container {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2.5px !important;
+  border-radius: 0 0 14px 14px !important;
+  overflow: hidden !important;
+  background: rgba(226, 232, 240, 0.4) !important;
+}
+
+.swal2-popup.swal2-toast .swal2-timer-progress-bar {
+  height: 2.5px !important;
+  background: linear-gradient(90deg, #10B981, #059669) !important;
+}
+.swal2-popup.swal2-toast.plat-swal-error .swal2-timer-progress-bar,
+.swal2-popup.swal2-toast.swal2-icon-error .swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #EF4444, #DC2626) !important;
+}
+.swal2-popup.swal2-toast.plat-swal-warning .swal2-timer-progress-bar,
+.swal2-popup.swal2-toast.swal2-icon-warning .swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #F59E0B, #D97706) !important;
+}
+.swal2-popup.swal2-toast.plat-swal-info .swal2-timer-progress-bar,
+.swal2-popup.swal2-toast.swal2-icon-info .swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #3B82F6, #2563EB) !important;
+}
+
+/* Close Button */
+.swal2-popup.swal2-toast .swal2-close {
+  position: static !important;
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 1.15rem !important;
+  line-height: 1 !important;
+  color: #94A3B8 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+.swal2-popup.swal2-toast .swal2-close:hover {
+  color: #0F172A !important;
+  background-color: #F1F5F9 !important;
+}
+
+/* Status left accent borders for subtle distinction */
+.swal2-popup.swal2-toast.plat-swal-success,
+.swal2-popup.swal2-toast.swal2-icon-success {
+  border-left: 3.5px solid #10B981 !important;
+}
+.swal2-popup.swal2-toast.plat-swal-error,
+.swal2-popup.swal2-toast.swal2-icon-error {
+  border-left: 3.5px solid #EF4444 !important;
+}
+.swal2-popup.swal2-toast.plat-swal-warning,
+.swal2-popup.swal2-toast.swal2-icon-warning {
+  border-left: 3.5px solid #F59E0B !important;
+}
+.swal2-popup.swal2-toast.plat-swal-info,
+.swal2-popup.swal2-toast.swal2-icon-info {
+  border-left: 3.5px solid #3B82F6 !important;
+}
+
+
+

@@ -53,7 +53,7 @@
                 <a href="{% url 'dashboard:banner_edit' b.id %}" class="btn btn-outline-dark" title="Edit">
                   <i class="bi bi-pencil"></i>
                 </a>
-                <form action="{% url 'dashboard:banner_delete' b.id %}" method="POST" onsubmit="return confirm('Delete this banner?');" class="d-inline">
+                <form action="{% url 'dashboard:banner_delete' b.id %}" method="POST" data-confirm="Permanently delete this promotional hero banner?" data-confirm-title="Delete Banner" data-confirm-btn="Yes, Delete Banner" class="d-inline">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-outline-danger" title="Delete">
                     <i class="bi bi-trash3"></i>

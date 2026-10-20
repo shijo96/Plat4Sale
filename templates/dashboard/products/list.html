@@ -112,7 +112,7 @@
                 <a href="{% url 'dashboard:product_edit' p.id %}" class="btn btn-outline-dark" title="Edit">
                   <i class="bi bi-pencil"></i>
                 </a>
-                <form action="{% url 'dashboard:product_delete' p.id %}" method="POST" onsubmit="return confirm('Delete product {{ p.name }}?');" class="d-inline">
+                <form action="{% url 'dashboard:product_delete' p.id %}" method="POST" data-confirm="Permanently delete product '{{ p.name|escapejs }}'? This cannot be undone." data-confirm-title="Delete Product" data-confirm-btn="Yes, Delete Product" class="d-inline">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-outline-danger" title="Delete">
                     <i class="bi bi-trash3"></i>

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Shop All Products — Plat4Sale{% endblock %}
+{% block title %}{% if selected_category %}{{ selected_category.seo_title }}{% elif q %}Search results for "{{ q }}" — {{ store.store_name|default:'Plat4Sale' }}{% else %}All Products & Collections — {{ store.store_name|default:'Plat4Sale' }}{% endif %}{% endblock %}
+{% block meta_description %}{% if selected_category %}{{ selected_category.seo_description }}{% else %}{{ store.seo_meta_description }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container my-4">

@@ -1,7 +1,39 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} — Buy Online at Plat4Sale{% endblock %}
+{% block title %}{{ product.seo_title }}{% endblock %}
+{% block meta_description %}{{ product.seo_description }}{% endblock %}
+{% block meta_keywords %}{{ product.meta_keywords|default:product.category.name }}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.seo_title }}{% endblock %}
+{% block og_description %}{{ product.seo_description }}{% endblock %}
+{% block og_image %}{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/logo.jpg' %}{% endif %}{% endblock %}
+{% block twitter_title %}{{ product.seo_title }}{% endblock %}
+{% block twitter_description %}{{ product.seo_description }}{% endblock %}
+{% block twitter_image %}{% if product.primary_image %}{{ product.primary_image.image.url }}{% else %}{% static 'images/logo.jpg' %}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<!-- Schema.org JSON-LD Structured Data for Google Rich Snippets -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.name|escapejs }}",
+  "image": [
+    {% if product.primary_image %}"{{ product.primary_image.image.url }}"{% else %}"{% static 'images/logo.jpg' %}"{% endif %}
+  ],
+  "description": "{{ product.seo_description|escapejs }}",
+  "sku": "{{ product.sku|escapejs }}",
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ store.canonical_base_url }}{{ product.get_absolute_url }}",
+    "priceCurrency": "INR",
+    "price": "{{ product.current_price }}",
+    "availability": "{% if product.in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+  }
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="container my-4">
@@ -17,25 +49,39 @@
 
   <div class="row g-4 mb-5">
 
-    <!-- Left Column: Gallery -->
+    <!-- Left Column: Gallery (Supports Images & Videos up to 10 slots) -->
     <div class="col-lg-6">
-      <div class="product-gallery-main mb-3 position-relative">
+      <div class="product-gallery-main mb-3 position-relative" id="main-media-container" style="background:#f8fafc; border-radius: 12px; min-height: 400px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         {% if product.discount_percentage > 0 %}
-          <span class="discount-badge" style="font-size:0.85rem; padding: 5px 12px;">{{ product.discount_percentage }}% OFF</span>
+          <span class="discount-badge" style="font-size:0.85rem; padding: 5px 12px; position: absolute; top: 12px; left: 12px; z-index: 5;">{{ product.discount_percentage }}% OFF</span>
         {% endif %}
         {% if product.primary_image %}
-          <img id="main-product-img" src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" />
+          {% if product.primary_image.is_video %}
+            <video id="main-product-video" src="{{ product.primary_image.image.url }}" controls autoplay muted playsinline class="w-100 h-100 rounded-3" style="max-height: 460px; object-fit: contain;"></video>
+            <img id="main-product-img" src="" alt="{{ product.name }}" style="display:none; max-height: 460px; object-fit: contain;" />
+          {% else %}
+            <img id="main-product-img" src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" style="max-height: 460px; object-fit: contain;" />
+            <video id="main-product-video" src="" controls class="w-100 h-100 rounded-3" style="display:none; max-height: 460px; object-fit: contain;"></video>
+          {% endif %}
         {% else %}
-          <img id="main-product-img" src="{% static 'images/logo.jpg' %}" alt="{{ product.name }}" />
+          <img id="main-product-img" src="{% static 'images/logo.jpg' %}" alt="{{ product.name }}" style="max-height: 460px; object-fit: contain;" />
+          <video id="main-product-video" src="" controls class="w-100 h-100 rounded-3" style="display:none;"></video>
         {% endif %}
       </div>
 
-      <!-- Thumbnail Selector -->
+      <!-- Thumbnail Selector (Images & Videos) -->
       {% if images|length > 1 %}
-      <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <div class="d-flex gap-2 justify-content-center flex-wrap" id="gallery-thumbs">
         {% for img in images %}
-        <div class="gallery-thumb-item {% if forloop.first %}active{% endif %}" onclick="changeMainImage('{{ img.image.url }}', this)">
-          <img src="{{ img.image.url }}" alt="Thumbnail" />
+        <div class="gallery-thumb-item position-relative {% if forloop.first %}active{% endif %}" onclick="switchMainMedia('{{ img.image.url }}', {{ img.is_video|yesno:'true,false' }}, this)" style="cursor: pointer; width: 68px; height: 68px; border-radius: 8px; border: 2px solid {% if forloop.first %}var(--plat-orange){% else %}#E2E8F0{% endif %}; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center;">
+          {% if img.is_video %}
+            <div class="position-relative w-100 h-100 d-flex align-items-center justify-content-center bg-dark">
+              <i class="bi bi-play-circle-fill text-warning fs-3"></i>
+              <span class="position-absolute bottom-0 start-50 translate-middle-x badge bg-danger text-white py-0 px-1" style="font-size:0.55rem;">VIDEO</span>
+            </div>
+          {% else %}
+            <img src="{{ img.image.url }}" alt="Thumbnail {{ forloop.counter }}" style="width: 100%; height: 100%; object-fit: cover;" />
+          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -91,13 +137,16 @@
         <p class="text-muted mb-4">{{ product.short_description }}</p>
         {% endif %}
 
-        <!-- Stock Status -->
+        <!-- Stock Status (Low Stock Alert <= 5, In Stock > 5 with quantity hidden) -->
         <div class="mb-4">
           {% if product.in_stock %}
             {% if product.stock <= 5 %}
-              <div class="d-flex align-items-center gap-2 text-warning fw-bold">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>Hurry! Only {{ product.stock }} units remaining in stock.</span>
+              <div class="stock-badge-low p-2 px-3 rounded-3 mb-1 d-inline-flex">
+                <i class="bi bi-fire fs-5 text-danger"></i>
+                <div>
+                  <span class="fw-bold">Only {{ product.stock }} left in stock!</span>
+                  <div class="small text-danger">High demand — selling fast, stock out soon!</div>
+                </div>
               </div>
             {% else %}
               <div class="d-flex align-items-center gap-2 text-success fw-bold">
@@ -115,33 +164,89 @@
 
         <!-- Purchase Action Form -->
         {% if product.in_stock %}
-        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="mb-4">
+        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="mb-4" id="product-purchase-form" onsubmit="return validateStockBeforeSubmit({{ product.stock }})">
           {% csrf_token %}
+
+          <!-- Fashion / Category Sizes (if category has sizes or product has sizes) -->
+          {% if product.sizes_list %}
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-dark d-flex align-items-center justify-content-between">
+              <span>Select Size: <span class="text-danger">*</span></span>
+              <span class="text-muted small fw-normal">Standard Fit</span>
+            </label>
+            <div class="variant-pills-group">
+              {% for s in product.sizes_list %}
+              <label class="variant-pill-label">
+                <input type="radio" name="size" value="{{ s }}" class="variant-pill-input" {% if forloop.first %}checked{% endif %} required>
+                <span class="variant-pill-box">{{ s }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Color Variant Selector (Optional for all products) -->
+          {% if product.colors_list %}
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-dark">
+              Select Color:
+            </label>
+            <div class="variant-pills-group">
+              {% for c in product.colors_list %}
+              <label class="variant-pill-label">
+                <input type="radio" name="color" value="{{ c }}" class="variant-pill-input" {% if forloop.first %}checked{% endif %}>
+                <span class="variant-color-box">
+                  <i class="bi bi-palette text-primary"></i> {{ c }}
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
           <div class="row g-2 align-items-center mb-3">
             <div class="col-auto">
               <label for="detail-qty" class="col-form-label fw-bold small text-muted">Quantity:</label>
             </div>
             <div class="col-auto">
               <div class="qty-counter">
-                <button type="button" class="qty-btn" onclick="adjustQty(-1)">-</button>
-                <input type="number" id="detail-qty" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-val border-0" readonly />
-                <button type="button" class="qty-btn" onclick="adjustQty(1)">+</button>
+                <button type="button" class="qty-btn" onclick="adjustQty(-1, {{ product.stock }})">-</button>
+                <input type="number" id="detail-qty" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-val border-0" onchange="validateMaxStock(this, {{ product.stock }})" />
+                <button type="button" class="qty-btn" onclick="adjustQty(1, {{ product.stock }})">+</button>
               </div>
+            </div>
+            <div class="col-auto">
+              <span class="text-muted small">(Max available: {{ product.stock }})</span>
             </div>
           </div>
 
+          <!-- Dynamic Button State: Go to Cart if already added, else Add to Cart & Buy Now -->
+          {% if product.id in cart_product_ids %}
+          <div class="row g-2">
+            <div class="col-12">
+              <a href="{% url 'cart:cart_detail' %}" class="btn btn-in-cart w-100 py-3 fw-bold fs-6 shadow-sm">
+                <i class="bi bi-check-circle-fill fs-5"></i> In Cart · Go to Cart →
+              </a>
+            </div>
+          </div>
+          {% else %}
           <div class="row g-2">
             <div class="col-6">
-              <button type="submit" class="btn btn-warning w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm">
+              <button type="submit" class="btn btn-warning w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm ajax-add-cart-btn" data-product-id="{{ product.id }}" id="detail-add-cart-btn">
                 <i class="bi bi-cart-plus fs-5"></i> Add to Cart
               </button>
             </div>
             <div class="col-6">
-              <button type="submit" name="buy_now" value="1" class="btn btn-plat-primary w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm">
-                <i class="bi bi-lightning-fill fs-5"></i> Buy Now
+              <button type="submit" name="buy_now" value="1" class="btn {% if store.whatsapp_only_orders %}btn-success{% else %}btn-plat-primary{% endif %} w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm">
+                {% if store.whatsapp_only_orders %}
+                  <i class="bi bi-whatsapp fs-5"></i> Buy Now
+                {% else %}
+                  <i class="bi bi-lightning-fill fs-5"></i> Buy Now
+                {% endif %}
               </button>
             </div>
           </div>
+          {% endif %}
         </form>
         {% endif %}
 
@@ -176,7 +281,7 @@
         <div class="mt-4 pt-3 border-top">
           <div class="row g-2 text-muted small">
             <div class="col-6"><i class="bi bi-check2-circle text-success me-1"></i> 100% Genuine Product</div>
-            <div class="col-6"><i class="bi bi-cash-coin text-success me-1"></i> Cash on Delivery Available</div>
+            <div class="col-6">{% if store.whatsapp_only_orders %}<i class="bi bi-whatsapp text-success me-1"></i> WhatsApp Orders Only{% else %}<i class="bi bi-cash-coin text-success me-1"></i> Cash on Delivery Available{% endif %}</div>
             <div class="col-6"><i class="bi bi-arrow-counterclockwise text-success me-1"></i> 7-Day Easy Returns</div>
             <div class="col-6"><i class="bi bi-truck text-success me-1"></i> Express Doorstep Shipping</div>
           </div>
@@ -315,19 +420,105 @@
 
 {% block extra_js %}
 <script>
-function changeMainImage(src, el) {
-  document.getElementById('main-product-img').src = src;
-  document.querySelectorAll('.gallery-thumb-item').forEach(item => item.classList.remove('active'));
-  el.classList.add('active');
+function switchMainMedia(src, isVideo, el) {
+  const imgEl = document.getElementById('main-product-img');
+  const videoEl = document.getElementById('main-product-video');
+
+  if (isVideo) {
+    if (imgEl) imgEl.style.display = 'none';
+    if (videoEl) {
+      videoEl.src = src;
+      videoEl.style.display = 'block';
+      videoEl.play().catch(() => {});
+    }
+  } else {
+    if (videoEl) {
+      videoEl.pause();
+      videoEl.style.display = 'none';
+    }
+    if (imgEl) {
+      imgEl.src = src;
+      imgEl.style.display = 'block';
+    }
+  }
+
+  document.querySelectorAll('.gallery-thumb-item').forEach(item => {
+    item.classList.remove('active');
+    item.style.borderColor = '#E2E8F0';
+  });
+  if (el) {
+    el.classList.add('active');
+    el.style.borderColor = 'var(--plat-orange)';
+  }
 }
 
-function adjustQty(amount) {
+function adjustQty(amount, maxStock) {
   const input = document.getElementById('detail-qty');
-  let val = parseInt(input.value) + amount;
-  const max = parseInt(input.getAttribute('max')) || 99;
+  if (!input) return;
+  let val = parseInt(input.value) || 1;
+  val += amount;
+  const max = parseInt(maxStock) || 99;
   if (val < 1) val = 1;
-  if (val > max) val = max;
+  if (val > max) {
+    val = max;
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Stock Limit Reached',
+        text: `Only ${max} units are available in stock.`,
+        confirmButtonText: 'Got It',
+      });
+    } else {
+      alert(`Only ${max} units are available in stock.`);
+    }
+  }
   input.value = val;
+}
+
+function validateMaxStock(input, maxStock) {
+  let val = parseInt(input.value) || 1;
+  const max = parseInt(maxStock) || 99;
+  if (val > max) {
+    input.value = max;
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Exceeds Available Stock',
+        text: `Requested quantity (${val}) exceeds available stock (${max}). Adjusted to maximum available.`,
+        confirmButtonText: 'OK',
+      });
+    } else {
+      alert(`Requested quantity (${val}) exceeds available stock (${max}). Set to maximum available.`);
+    }
+  } else if (val < 1) {
+    input.value = 1;
+  }
+}
+
+function validateStockBeforeSubmit(maxStock) {
+  const input = document.getElementById('detail-qty');
+  if (input) {
+    let val = parseInt(input.value) || 1;
+    const max = parseInt(maxStock) || 99;
+    if (val > max) {
+      input.value = max;
+      if (typeof Swal !== "undefined") {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock Limit Exceeded',
+          text: `Cannot order more than ${max} units in stock.`,
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'swal2-danger plat-btn-danger',
+          },
+        });
+      } else {
+        alert(`Cannot order more than ${max} units in stock.`);
+      }
+      return false;
+    }
+  }
+  return true;
 }
 </script>
 {% endblock %}

@@ -62,10 +62,24 @@
               <span class="fw-bold fs-6 text-dark ms-2">₹{{ item.subtotal }}</span>
             </div>
 
+            {% if item.selected_size or item.selected_color %}
+            <div class="d-flex align-items-center gap-2 my-1">
+              {% if item.selected_size %}
+                <span class="badge bg-light text-dark border"><i class="bi bi-rulers me-1 text-primary"></i>Size: <strong>{{ item.selected_size }}</strong></span>
+              {% endif %}
+              {% if item.selected_color %}
+                <span class="badge bg-light text-dark border"><i class="bi bi-palette me-1 text-primary"></i>Color: <strong>{{ item.selected_color }}</strong></span>
+              {% endif %}
+            </div>
+            {% endif %}
+
             <div class="text-muted small mb-2">
               Unit Price: <strong>₹{{ item.unit_price }}</strong>
               {% if item.product.sale_price and item.product.sale_price < item.product.price %}
                 <span class="text-decoration-line-through ms-1 text-muted">₹{{ item.product.price }}</span>
+              {% endif %}
+              {% if item.product.stock <= 5 %}
+                <span class="text-danger fw-bold ms-2"><i class="bi bi-fire"></i> Only {{ item.product.stock }} left!</span>
               {% endif %}
             </div>
 
@@ -107,7 +121,7 @@
         <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
           <i class="bi bi-arrow-left me-1"></i> Continue Shopping
         </a>
-        <form action="{% url 'cart:clear_cart' %}" method="POST" onsubmit="return confirm('Are you sure you want to clear your cart?');">
+        <form action="{% url 'cart:clear_cart' %}" method="POST" data-confirm="Are you sure you want to empty your entire cart? All items will be removed." data-confirm-title="Clear Shopping Cart" data-confirm-btn="Yes, Clear Cart">
           {% csrf_token %}
           <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
             <i class="bi bi-x-circle me-1"></i> Clear Cart
@@ -143,6 +157,17 @@
           <span class="h4 fw-bold text-dark mb-0">₹{{ cart.total_amount }}</span>
         </div>
 
+        {% if store.whatsapp_only_orders %}
+        <a href="{% url 'orders:checkout' %}" class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3 fs-6">
+          <i class="bi bi-whatsapp fs-5"></i> Proceed to WhatsApp Checkout
+        </a>
+
+        <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 text-center small text-success-emphasis">
+          <i class="bi bi-whatsapp fs-4 d-block mb-1 text-success"></i>
+          <div class="fw-bold">Direct WhatsApp Ordering</div>
+          <div style="font-size:0.75rem;" class="text-secondary">Instant dispatch & order confirmation directly on WhatsApp</div>
+        </div>
+        {% else %}
         <a href="{% url 'orders:checkout' %}" class="btn btn-warning w-100 py-3 fw-bold rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2 mb-3">
           <i class="bi bi-lock-fill"></i> Proceed to Checkout
         </a>
@@ -152,6 +177,7 @@
           <div>Safe & Secure Ordering</div>
           <div style="font-size:0.75rem;">Pay via Cash on Delivery (COD) or instant WhatsApp confirmation</div>
         </div>
+        {% endif %}
 
       </div>
     </div>

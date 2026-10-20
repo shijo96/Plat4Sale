@@ -55,7 +55,7 @@
                 <a href="{% url 'dashboard:category_edit' cat.id %}" class="btn btn-outline-dark" title="Edit">
                   <i class="bi bi-pencil"></i>
                 </a>
-                <form action="{% url 'dashboard:category_delete' cat.id %}" method="POST" onsubmit="return confirm('Delete category {{ cat.name }}?');" class="d-inline">
+                <form action="{% url 'dashboard:category_delete' cat.id %}" method="POST" data-confirm="Delete category '{{ cat.name|escapejs }}'? Associated products may lose their category." data-confirm-title="Delete Category" data-confirm-btn="Yes, Delete Category" class="d-inline">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-outline-danger" title="Delete">
                     <i class="bi bi-trash3"></i>

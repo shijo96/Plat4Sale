@@ -130,6 +130,16 @@
             <tr>
               <td>
                 <div class="fw-bold text-dark">{{ item.product_name }}</div>
+                {% if item.selected_size or item.selected_color %}
+                <div class="d-flex align-items-center gap-1 mt-1">
+                  {% if item.selected_size %}
+                    <span class="badge bg-light text-dark border" style="font-size:0.7rem;">Size: {{ item.selected_size }}</span>
+                  {% endif %}
+                  {% if item.selected_color %}
+                    <span class="badge bg-light text-dark border" style="font-size:0.7rem;">Color: {{ item.selected_color }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
                 {% if item.product_sku %}
                 <div class="small text-muted">SKU: {{ item.product_sku }}</div>
                 {% endif %}
@@ -164,7 +174,7 @@
         </a>
 
         {% if order.can_cancel %}
-        <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" onsubmit="return confirm('Cancel this order?');">
+        <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" data-confirm="Are you sure you want to cancel this order? This action cannot be undone." data-confirm-title="Cancel Order #{{ order.order_number }}" data-confirm-btn="Yes, Cancel Order">
           {% csrf_token %}
           <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
             <i class="bi bi-x-circle me-1"></i> Cancel Order

@@ -131,41 +131,54 @@
   </div>
 </header>
 
-<!-- Secondary Category Ribbon Sub-bar -->
+<!-- Secondary Category Ribbon Sub-bar with Unclipped All Departments Dropdown -->
 <nav class="category-ribbon">
-  <div class="container d-flex align-items-center gap-1">
-    <div class="dropdown d-inline-block">
-      <button class="btn ribbon-link text-white fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
-        <i class="bi bi-list fs-6"></i> All Departments
+  <div class="container d-flex align-items-center gap-2 position-relative">
+    
+    <!-- All Departments Dropdown -->
+    <div class="dropdown department-dropdown-wrap">
+      <button class="btn ribbon-dept-btn text-white fw-bold dropdown-toggle" type="button" id="allDepartmentsBtn" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+        <i class="bi bi-list fs-5 text-warning"></i>
+        <span>All Departments</span>
       </button>
-      <ul class="dropdown-menu shadow border-0">
-        <li><a class="dropdown-item" href="{% url 'catalog:product_list' %}"><i class="bi bi-grid me-2"></i>All Products</a></li>
-        <li><hr class="dropdown-divider"></li>
+      <ul class="dropdown-menu department-dropdown-menu shadow-lg border-0" aria-labelledby="allDepartmentsBtn">
+        <li class="dropdown-header text-uppercase fw-bold text-dark small bg-light py-2 px-3">
+          <i class="bi bi-grid-3x3-gap-fill text-warning me-1"></i> Shop by Department
+        </li>
+        <li><a class="dropdown-item py-2 px-3" href="{% url 'catalog:product_list' %}"><i class="bi bi-stars text-warning me-2"></i><strong>All Products Catalog</strong></a></li>
+        <li><hr class="dropdown-divider my-1"></li>
         {% for cat in nav_categories %}
         <li>
-          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ cat.get_absolute_url }}">
-            <i class="bi {{ cat.icon_class }} text-warning"></i> {{ cat.name }}
+          <a class="dropdown-item py-2 px-3 d-flex align-items-center justify-content-between" href="{{ cat.get_absolute_url }}">
+            <span class="d-flex align-items-center gap-2">
+              <i class="bi {{ cat.icon_class }} text-warning fs-6"></i>
+              <span>{{ cat.name }}</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
           </a>
         </li>
         {% endfor %}
       </ul>
     </div>
 
-    {% for cat in nav_categories|slice:":5" %}
-    <a href="{{ cat.get_absolute_url }}" class="ribbon-link">
-      {{ cat.name }}
-    </a>
-    {% endfor %}
+    <!-- Horizontally Scrolling Category Links -->
+    <div class="ribbon-categories-scroll d-flex align-items-center gap-1">
+      {% for cat in nav_categories|slice:":6" %}
+      <a href="{{ cat.get_absolute_url }}" class="ribbon-link">
+        {{ cat.name }}
+      </a>
+      {% endfor %}
 
-    <a href="{% url 'catalog:product_list' %}?sort=bestseller" class="ribbon-link deals-link">
-      <i class="bi bi-fire text-warning"></i> Best Sellers
-    </a>
+      <a href="{% url 'catalog:product_list' %}?sort=bestseller" class="ribbon-link deals-link">
+        <i class="bi bi-fire text-warning"></i> Best Sellers
+      </a>
 
-    <a href="{% url 'catalog:product_list' %}" class="ribbon-link">
-      <i class="bi bi-tag text-warning"></i> Latest Deals
-    </a>
+      <a href="{% url 'catalog:product_list' %}" class="ribbon-link">
+        <i class="bi bi-tag text-warning"></i> Latest Deals
+      </a>
+    </div>
 
-    <a href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale!%20I%20would%20like%20to%20order." target="_blank" rel="noopener" class="ribbon-link text-success ms-auto d-none d-lg-inline-flex">
+    <a href="https://wa.me/{{ store.whatsapp_number }}?text=Hello%20Plat4Sale!%20I%20would%20like%20to%20order." target="_blank" rel="noopener" class="ribbon-link text-success ms-auto d-none d-xl-inline-flex text-nowrap">
       <i class="bi bi-whatsapp"></i> Order on WhatsApp
     </a>
   </div>

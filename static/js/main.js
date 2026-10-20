@@ -1,11 +1,13 @@
 /**
- * Plat4Sale - Frontend Dynamic Interactions
+ * Plat4Sale - Frontend Dynamic Interactions & SweetAlert2 Integration
  */
 
 document.addEventListener("DOMContentLoaded", function () {
   initSearchAutocomplete();
   initAjaxCart();
   initAjaxWishlist();
+  initSweetConfirmInterceptors();
+  initProductClickTracking();
 });
 
 // CSRF Helper for AJAX requests
@@ -24,8 +26,31 @@ function getCookie(name) {
   return cookieValue;
 }
 
-// Show Toast Alert Notification
+// SweetAlert2 Styled Notification Toast
 function showToast(message, type = "success") {
+  if (typeof Swal !== "undefined") {
+    const icon = (type === "danger" || type === "error") ? "error" : type;
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: icon,
+      title: message,
+      showConfirmButton: false,
+      timer: 3500,
+      timerProgressBar: true,
+      backdrop: false,
+      customClass: {
+        popup: `plat-swal-toast plat-swal-${icon}`,
+      },
+      didOpen: (toast) => {
+        toast.addEventListener("mouseenter", Swal.stopTimer);
+        toast.addEventListener("mouseleave", Swal.resumeTimer);
+      },
+    });
+    return;
+  }
+
+  // Fallback to Bootstrap toast if SweetAlert is loading
   const container = document.getElementById("toast-container");
   if (!container) return;
 
@@ -34,9 +59,6 @@ function showToast(message, type = "success") {
   const icon = type === "success" ? "bi-check-circle-fill text-warning" : "bi-exclamation-triangle-fill text-white";
 
   toastEl.className = `toast align-items-center ${bgClass} border-0 shadow-lg mb-2`;
-  toastEl.setAttribute("role", "alert");
-  toastEl.setAttribute("aria-live", "assertive");
-  toastEl.setAttribute("aria-atomic", "true");
   toastEl.innerHTML = `
     <div class="d-flex">
       <div class="toast-body d-flex align-items-center gap-2">
@@ -46,11 +68,173 @@ function showToast(message, type = "success") {
       <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   `;
-
   container.appendChild(toastEl);
   const bsToast = new bootstrap.Toast(toastEl, { delay: 3500 });
   bsToast.show();
   toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
+}
+
+// Plat4Sale - SweetAlert2 Theme Cleaner (Styles are managed via static/css/main.css)
+function injectSweetAlertTheme() {
+  const stale = document.getElementById("plat-swal-theme-injected");
+  if (stale) {
+    stale.remove();
+  }
+}
+
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", injectSweetAlertTheme);
+  } else {
+    injectSweetAlertTheme();
+  }
+}
+
+// Automatically override standard window.alert with SweetAlert2
+if (typeof window !== "undefined") {
+  window.originalAlert = window.alert;
+  window.alert = function (message) {
+    if (typeof Swal !== "undefined") {
+      injectSweetAlertTheme();
+      return Swal.fire({
+        title: "Notice",
+        text: String(message),
+        icon: "info",
+        confirmButtonText: "Got It",
+      });
+    } else if (window.originalAlert) {
+      window.originalAlert(message);
+    }
+  };
+}
+
+// Global SweetAlert Helpers
+window.sweetAlert = function (title, text, icon = "info") {
+  injectSweetAlertTheme();
+  if (typeof Swal !== "undefined") {
+    return Swal.fire({
+      title: title,
+      text: text,
+      icon: icon,
+      confirmButtonText: "Got It",
+    });
+  }
+  alert(`${title}\n\n${text}`);
+};
+
+window.sweetConfirm = function (title, text, confirmBtnText = "Yes, Proceed", icon = "warning", isDanger = true) {
+  injectSweetAlertTheme();
+  if (typeof Swal !== "undefined") {
+    return Swal.fire({
+      title: title,
+      text: text,
+      icon: icon,
+      showCancelButton: true,
+      confirmButtonText: confirmBtnText,
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      customClass: {
+        confirmButton: isDanger ? "swal2-danger plat-btn-danger" : "",
+      },
+    });
+  }
+  return Promise.resolve({ isConfirmed: confirm(`${title}\n\n${text}`) });
+};
+
+// Universal SweetAlert Confirmation Interceptor for Forms & Links
+function initSweetConfirmInterceptors() {
+  injectSweetAlertTheme();
+
+  // Forms with data-confirm
+  document.addEventListener("submit", function (e) {
+    const form = e.target;
+    const submitter = e.submitter;
+    const confirmMsg = form.getAttribute("data-confirm") || (submitter && submitter.getAttribute("data-confirm"));
+    if (confirmMsg && !form.dataset.confirmed) {
+      e.preventDefault();
+      if (typeof Swal !== "undefined") {
+        injectSweetAlertTheme();
+        const title = form.getAttribute("data-confirm-title") || (submitter && submitter.getAttribute("data-confirm-title")) || "Are you sure?";
+        const btnText = form.getAttribute("data-confirm-btn") || (submitter && submitter.getAttribute("data-confirm-btn")) || "Yes, Proceed";
+        const isDanger = !form.getAttribute("data-confirm-btn-type") || form.getAttribute("data-confirm-btn-type") === "danger" || /delete|cancel|remove|empty/i.test(title + " " + btnText);
+        
+        Swal.fire({
+          title: title,
+          text: confirmMsg,
+          icon: form.getAttribute("data-confirm-icon") || (submitter && submitter.getAttribute("data-confirm-icon")) || "warning",
+          showCancelButton: true,
+          confirmButtonText: btnText,
+          cancelButtonText: "Cancel",
+          reverseButtons: true,
+          customClass: {
+            confirmButton: isDanger ? "swal2-danger plat-btn-danger" : "",
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.dataset.confirmed = "true";
+            if (typeof form.requestSubmit === "function" && submitter) {
+              form.requestSubmit(submitter);
+            } else if (typeof form.requestSubmit === "function") {
+              form.requestSubmit();
+            } else {
+              HTMLFormElement.prototype.submit.call(form);
+            }
+          }
+        });
+      } else {
+        if (confirm(confirmMsg)) {
+          form.dataset.confirmed = "true";
+          HTMLFormElement.prototype.submit.call(form);
+        }
+      }
+    }
+  });
+
+  // Action links / buttons with data-confirm
+  document.addEventListener("click", function (e) {
+    const trigger = e.target.closest("a[data-confirm], button[data-confirm]:not([type='submit'])");
+    if (!trigger || trigger.dataset.confirmed) return;
+
+    e.preventDefault();
+    const confirmMsg = trigger.getAttribute("data-confirm");
+    if (typeof Swal !== "undefined") {
+      injectSweetAlertTheme();
+      const title = trigger.getAttribute("data-confirm-title") || "Are you sure?";
+      const btnText = trigger.getAttribute("data-confirm-btn") || "Yes, Proceed";
+      const isDanger = !trigger.getAttribute("data-confirm-btn-type") || trigger.getAttribute("data-confirm-btn-type") === "danger" || /delete|cancel|remove|empty/i.test(title + " " + btnText);
+
+      Swal.fire({
+        title: title,
+        text: confirmMsg,
+        icon: trigger.getAttribute("data-confirm-icon") || "warning",
+        showCancelButton: true,
+        confirmButtonText: btnText,
+        cancelButtonText: "Cancel",
+        reverseButtons: true,
+        customClass: {
+          confirmButton: isDanger ? "swal2-danger plat-btn-danger" : "",
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          trigger.dataset.confirmed = "true";
+          if (trigger.tagName.toLowerCase() === "a") {
+            window.location.href = trigger.href;
+          } else if (trigger.form) {
+            trigger.form.submit();
+          } else {
+            trigger.click();
+          }
+        }
+      });
+    } else {
+      if (confirm(confirmMsg)) {
+        trigger.dataset.confirmed = "true";
+        if (trigger.tagName.toLowerCase() === "a") {
+          window.location.href = trigger.href;
+        }
+      }
+    }
+  });
 }
 
 // Live Search Autocomplete
@@ -137,8 +321,15 @@ function initAjaxCart() {
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Adding...`;
 
+    // Check if variant selections exist on page (e.g., detail page)
     const formData = new FormData();
-    formData.append("quantity", "1");
+    const sizeInput = document.querySelector('input[name="size"]:checked');
+    const colorInput = document.querySelector('input[name="color"]:checked');
+    const qtyInput = document.querySelector('input[name="quantity"]');
+
+    formData.append("quantity", qtyInput ? qtyInput.value : "1");
+    if (sizeInput) formData.append("size", sizeInput.value);
+    if (colorInput) formData.append("color", colorInput.value);
 
     fetch(`/cart/add/${productId}/`, {
       method: "POST",
@@ -150,8 +341,6 @@ function initAjaxCart() {
     })
       .then((res) => res.json())
       .then((data) => {
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
         if (data.success) {
           // Update header badges
           const badge = document.getElementById("header-cart-count");
@@ -161,7 +350,19 @@ function initAjaxCart() {
           if (mobileBadge) mobileBadge.textContent = data.cart_count;
 
           showToast(data.message, "success");
+
+          // Transform all add-to-cart buttons for this product into "Go to Cart" buttons
+          document.querySelectorAll(`.ajax-add-cart-btn[data-product-id="${productId}"]`).forEach((b) => {
+            const isSmall = b.classList.contains("btn-sm");
+            const goCartLink = document.createElement("a");
+            goCartLink.href = "/cart/";
+            goCartLink.className = `btn btn-in-cart ${isSmall ? 'btn-sm' : ''} w-100`;
+            goCartLink.innerHTML = `<i class="bi bi-check-circle-fill text-white"></i> In Cart · Go to Cart →`;
+            b.replaceWith(goCartLink);
+          });
         } else {
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
           showToast(data.message || "Could not add product.", "danger");
         }
       })
@@ -216,5 +417,35 @@ function initAjaxWishlist() {
       .catch(() => {
         showToast("Please log in to manage your wishlist.", "danger");
       });
+  });
+}
+
+// Product Click & Traffic Tracking
+function initProductClickTracking() {
+  document.addEventListener("click", function (e) {
+    const card = e.target.closest(".product-card[data-product-id]");
+    if (!card) return;
+
+    // Ignore wishlist toggle or add-to-cart clicks
+    if (
+      e.target.closest(".wishlist-toggle-btn") ||
+      e.target.closest(".btn-add-cart") ||
+      e.target.closest(".btn-in-cart")
+    ) {
+      return;
+    }
+
+    const productId = card.getAttribute("data-product-id");
+    if (!productId) return;
+
+    const trackUrl = `/api/track-click/${productId}/`;
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(trackUrl);
+    } else {
+      fetch(trackUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      }).catch(() => {});
+    }
   });
 }

@@ -55,30 +55,159 @@
       </div>
     </div>
 
-    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">Product Images</h5>
+    <!-- Product Variants (Fashion Sizes & Colors) -->
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+      <i class="bi bi-palette2 text-primary me-1"></i> Product Variants (Sizes & Colors)
+    </h5>
     <div class="row g-3 mb-4">
-      <div class="col-md-4">
-        <label class="form-label fw-bold small text-muted">Primary Product Image</label>
-        {{ form.primary_image }}
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">
+          Available Sizes (Fashion / Apparel / Shoes)
+        </label>
+        {{ form.available_sizes }}
+        <div class="form-text small text-muted">
+          Enter comma-separated sizes for clothing/fashion (e.g. <code>S, M, L, XL, XXL</code> or <code>6, 7, 8, 9, 10</code>). Leave blank if not applicable.
+        </div>
       </div>
-      <div class="col-md-4">
-        <label class="form-label fw-bold small text-muted">Gallery Image 2 (Optional)</label>
-        {{ form.additional_image_1 }}
+      <div class="col-md-6">
+        <label class="form-label fw-bold small text-muted">
+          Available Colors (Optional for all products)
+        </label>
+        {{ form.available_colors }}
+        <div class="form-text small text-muted">
+          Enter comma-separated colors (e.g. <code>Black, Midnight Blue, Silver, Crimson Red</code>).
+        </div>
       </div>
-      <div class="col-md-4">
-        <label class="form-label fw-bold small text-muted">Gallery Image 3 (Optional)</label>
-        {{ form.additional_image_2 }}
+    </div>
+
+    <!-- Product Media Section (Up to 10 slots) -->
+    <h5 class="fw-bold mb-3 pb-2 border-bottom text-dark d-flex align-items-center justify-content-between">
+      <span><i class="bi bi-images text-warning me-1"></i> Product Media (Up to 10 Photos / Videos)</span>
+      <span class="badge bg-light text-dark border fw-normal">Slot 1 Compulsory · Slots 2–10 Optional</span>
+    </h5>
+
+    <!-- Admin-Only Upload Specifications Box -->
+    <div class="alert alert-info border-0 rounded-3 mb-4 p-3 d-flex align-items-start gap-3">
+      <i class="bi bi-info-circle-fill text-primary fs-4 mt-1"></i>
+      <div class="small">
+        <strong class="d-block text-dark mb-1">Admin Upload Format & Size Requirements (Admin Panel Only):</strong>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <span class="fw-bold text-dark">• Images:</span> Supported formats <code>JPG, JPEG, PNG, WEBP</code>. Recommended 800×800 or 1000×1000 px. Max file size: <strong>5MB per image</strong>.
+          </div>
+          <div class="col-md-6">
+            <span class="fw-bold text-dark">• Videos:</span> Supported formats <code>MP4, WEBM, MOV</code>. Video duration: under 60 seconds recommended. Max file size: <strong>25MB per video</strong>.
+          </div>
+        </div>
+        <div class="text-muted mt-1" style="font-size:0.78rem;">
+          * Note: Slot 1 is the compulsory primary storefront image. Slots 2 through 10 support additional images or showcase videos.
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Inputs Grid (10 Slots) -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3 bg-light">
+          <label class="form-label fw-bold small text-dark d-flex align-items-center justify-content-between">
+            <span>Slot 1: Primary Image *</span>
+            <span class="badge bg-warning text-dark">Compulsory Image</span>
+          </label>
+          {{ form.primary_image }}
+          {% if form.primary_image.errors %}<div class="text-danger small mt-1">{{ form.primary_image.errors.0 }}</div>{% endif %}
+          <div class="form-text small text-muted">Compulsory high-res primary product photograph (Max 5MB).</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 2: Media (Image or Video)</label>
+          {{ form.media_2 }}
+          <div class="form-text small text-muted">Optional image (max 5MB) or MP4/WEBM video (max 25MB).</div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 3: Media (Image or Video)</label>
+          {{ form.media_3 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 4: Media (Image or Video)</label>
+          {{ form.media_4 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 5: Media (Image or Video)</label>
+          {{ form.media_5 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 6: Media (Image or Video)</label>
+          {{ form.media_6 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 7: Media (Image or Video)</label>
+          {{ form.media_7 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 8: Media (Image or Video)</label>
+          {{ form.media_8 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 9: Media (Image or Video)</label>
+          {{ form.media_9 }}
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3 border rounded-3">
+          <label class="form-label fw-bold small text-muted">Slot 10: Media (Image or Video)</label>
+          {{ form.media_10 }}
+        </div>
       </div>
     </div>
 
     {% if product and product.images.all %}
-    <div class="mb-4">
-      <label class="form-label fw-bold small text-muted d-block">Current Product Images:</label>
-      <div class="d-flex gap-2">
+    <div class="mb-4 p-3 bg-light rounded-3 border">
+      <label class="form-label fw-bold small text-dark d-block mb-2">Current Uploaded Media Gallery ({{ product.images.count }}/10):</label>
+      <div class="d-flex flex-wrap gap-3">
         {% for img in product.images.all %}
-        <div class="p-1 border rounded bg-light text-center" style="width: 80px;">
-          <img src="{{ img.image.url }}" alt="Existing photo" style="width: 100%; height: 60px; object-fit: contain;" />
-          {% if img.is_primary %}<span class="badge bg-warning text-dark small" style="font-size:0.6rem;">Primary</span>{% endif %}
+        <div class="position-relative p-2 border rounded bg-white text-center shadow-sm" style="width: 110px;">
+          {% if img.is_video %}
+            <div class="bg-dark rounded d-flex align-items-center justify-content-center" style="width: 100%; height: 75px;">
+              <i class="bi bi-play-circle-fill text-warning fs-3"></i>
+            </div>
+            <span class="badge bg-danger text-white mt-1 d-block" style="font-size:0.6rem;">VIDEO</span>
+          {% else %}
+            <img src="{{ img.image.url }}" alt="Media {{ forloop.counter }}" style="width: 100%; height: 75px; object-fit: contain;" />
+            {% if img.is_primary %}
+              <span class="badge bg-warning text-dark mt-1 d-block" style="font-size:0.6rem;">Primary</span>
+            {% else %}
+              <span class="badge bg-secondary text-white mt-1 d-block" style="font-size:0.6rem;">Slot {{ forloop.counter }}</span>
+            {% endif %}
+          {% endif %}
+          {% if not img.is_primary %}
+          <a href="{% url 'dashboard:product_media_delete' img.id %}" data-confirm="Remove this media item permanently?" data-confirm-title="Remove Media" data-confirm-btn="Yes, Remove" class="btn btn-sm btn-outline-danger py-0 px-1 position-absolute top-0 end-0 translate-middle-y" title="Delete media">
+            <i class="bi bi-x"></i>
+          </a>
+          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -109,6 +238,33 @@
         <div class="form-check">
           {{ form.is_active }}
           <label class="form-check-label small fw-bold" for="{{ form.is_active.id_for_label }}">Active</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product SEO Meta Tags -->
+    <div class="card border rounded-3 mb-4">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-dark small"><i class="bi bi-search text-primary me-1"></i> Product Search Engine Optimization (SEO) — Optional</span>
+        <span class="badge bg-secondary-subtle text-secondary small">Custom Meta Tags</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">Custom SEO Title Tag</label>
+            {{ form.meta_title }}
+            <div class="text-muted small mt-1">If blank, defaults to "Product Name — Buy Online at Best Price | Plat4Sale".</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold small text-muted">SEO Keywords</label>
+            {{ form.meta_keywords }}
+            <div class="text-muted small mt-1">Comma-separated search keywords for this product.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-bold small text-muted">Custom Search Meta Description</label>
+            {{ form.meta_description }}
+            <div class="text-muted small mt-1">If blank, auto-generated from short description (150-160 characters recommended).</div>
+          </div>
         </div>
       </div>
     </div>

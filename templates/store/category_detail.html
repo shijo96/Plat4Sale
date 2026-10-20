@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ category.name }} — Plat4Sale{% endblock %}
+{% block title %}{{ category.seo_title }}{% endblock %}
+{% block meta_description %}{{ category.seo_description }}{% endblock %}
+{% block og_title %}{{ category.seo_title }}{% endblock %}
+{% block og_description %}{{ category.seo_description }}{% endblock %}
 
 {% block content %}
 <div class="container my-4">

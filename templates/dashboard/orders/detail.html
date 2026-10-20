@@ -78,6 +78,16 @@
               <tr>
                 <td>
                   <strong>{{ item.product_name }}</strong>
+                  {% if item.selected_size or item.selected_color %}
+                  <div class="d-flex align-items-center gap-1 mt-1">
+                    {% if item.selected_size %}
+                      <span class="badge bg-light text-dark border">Size: <strong>{{ item.selected_size }}</strong></span>
+                    {% endif %}
+                    {% if item.selected_color %}
+                      <span class="badge bg-light text-dark border">Color: <strong>{{ item.selected_color }}</strong></span>
+                    {% endif %}
+                  </div>
+                  {% endif %}
                   {% if item.product_sku %}
                   <div class="text-muted" style="font-size:0.75rem;">SKU: {{ item.product_sku }}</div>
                   {% endif %}

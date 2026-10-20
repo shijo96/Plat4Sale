@@ -71,7 +71,7 @@
               View Details & Tracking
             </a>
             {% if order.can_cancel %}
-            <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" onsubmit="return confirm('Are you sure you want to cancel Order #{{ order.order_number }}?');">
+            <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" data-confirm="Are you sure you want to cancel Order #{{ order.order_number }}? This cannot be undone." data-confirm-title="Cancel Order #{{ order.order_number }}" data-confirm-btn="Yes, Cancel Order">
               {% csrf_token %}
               <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
                 Cancel

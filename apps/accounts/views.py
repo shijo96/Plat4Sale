@@ -55,18 +55,27 @@ def register_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect("dashboard:home")
         return redirect("catalog:home")
 
-    next_url = request.GET.get("next") or request.POST.get("next") or "catalog:home"
+    next_url = request.GET.get("next") or request.POST.get("next") or ""
 
     if request.method == "POST":
         form = UserLoginForm(request.POST)
         if form.is_valid():
             user = form.user
             login(request, user)
+            request.session.modified = True
             _merge_guest_cart(request, user)
             messages.success(request, f"Welcome back, {user.first_name or user.username}!")
-            return redirect(next_url)
+
+            # Smart redirection: if next is given, follow it; if admin/staff, go to dashboard
+            if next_url and next_url not in ["catalog:home", "/"]:
+                return redirect(next_url)
+            if user.is_staff or user.is_superuser:
+                return redirect("dashboard:home")
+            return redirect("catalog:home")
     else:
         form = UserLoginForm()
 
@@ -74,8 +83,10 @@ def login_view(request):
 
 
 def logout_view(request):
+    # Completely flush and clear session data
+    request.session.flush()
     logout(request)
-    messages.info(request, "You have been logged out securely. See you soon!")
+    messages.success(request, "You have been logged out securely. Your session has been cleared.")
     return redirect("catalog:home")
 
 

@@ -51,12 +51,6 @@
           <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
         </button>
 
-        <div class="p-3 bg-light rounded-3 text-center small text-muted mb-3">
-          <div class="fw-bold text-dark mb-1">Demo Credentials:</div>
-          <div>Admin: <code>admin</code> / <code>adminpassword123</code></div>
-          <div>Customer: <code>shijo</code> / <code>customerpass123</code></div>
-        </div>
-
         <div class="text-center small">
           Don't have an account yet?
           <a href="{% url 'accounts:register' %}{% if next %}?next={{ next }}{% endif %}" class="fw-bold text-dark text-decoration-none">

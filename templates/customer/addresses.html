@@ -48,7 +48,7 @@
             </button>
           </form>
           {% endif %}
-          <form action="{% url 'accounts:address_delete' addr.id %}" method="POST" onsubmit="return confirm('Delete address?');" class="d-inline">
+          <form action="{% url 'accounts:address_delete' addr.id %}" method="POST" data-confirm="Are you sure you want to permanently delete this address?" data-confirm-title="Delete Address" data-confirm-btn="Yes, Delete" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
               <i class="bi bi-trash3"></i>

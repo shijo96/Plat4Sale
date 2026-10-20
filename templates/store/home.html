@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Plat4Sale — FIND • SHOP • LOVE | Best Online Shopping{% endblock %}
+{% block title %}{{ store.seo_meta_title|default:store.store_name|default:'Plat4Sale — FIND • SHOP • LOVE' }}{% endblock %}
 
 {% block content %}
 <div class="container my-3">

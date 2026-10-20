@@ -45,14 +45,22 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="cart_items")
     quantity = models.PositiveIntegerField(default=1)
+    selected_size = models.CharField(max_length=50, blank=True, default="")
+    selected_color = models.CharField(max_length=50, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
-        unique_together = ("cart", "product")
+        unique_together = ("cart", "product", "selected_size", "selected_color")
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name}"
+        variant = []
+        if self.selected_size:
+            variant.append(f"Size: {self.selected_size}")
+        if self.selected_color:
+            variant.append(f"Color: {self.selected_color}")
+        var_str = f" ({', '.join(variant)})" if variant else ""
+        return f"{self.quantity} x {self.product.name}{var_str}"
 
     @property
     def unit_price(self):

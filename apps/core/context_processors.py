@@ -18,6 +18,7 @@ def store_context(request):
 
     cart_count = 0
     cart_subtotal = 0
+    cart_product_ids = set()
     wishlist_count = 0
 
     try:
@@ -27,6 +28,7 @@ def store_context(request):
             if user_cart:
                 cart_count = user_cart.total_items
                 cart_subtotal = user_cart.subtotal
+                cart_product_ids = set(user_cart.items.values_list("product_id", flat=True))
             wishlist_count = WishlistItem.objects.filter(user=request.user).count()
         else:
             session_key = request.session.session_key
@@ -35,6 +37,7 @@ def store_context(request):
                 if guest_cart:
                     cart_count = guest_cart.total_items
                     cart_subtotal = guest_cart.subtotal
+                    cart_product_ids = set(guest_cart.items.values_list("product_id", flat=True))
     except Exception:
         pass
 
@@ -43,6 +46,7 @@ def store_context(request):
         "nav_categories": categories,
         "cart_count": cart_count,
         "cart_subtotal": cart_subtotal,
+        "cart_product_ids": cart_product_ids,
         "wishlist_count": wishlist_count,
         "current_year": datetime.now().year,
     }

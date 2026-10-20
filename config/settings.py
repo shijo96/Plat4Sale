@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.TrafficTrackingMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -148,3 +149,8 @@ if trusted_origins_env:
     CSRF_TRUSTED_ORIGINS.extend([o.strip() for o in trusted_origins_env.split(",") if o.strip()])
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Session Security & Handling
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True

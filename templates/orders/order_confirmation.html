@@ -25,18 +25,22 @@
       <!-- WhatsApp Order Confirmation Callout -->
       <div class="p-4 rounded-4 mb-4 border" style="background-color: #F0FDF4; border-color: #86EFAC !important;">
         <div class="row align-items-center g-3">
-          <div class="col-md-8">
+          <div class="col-md-7">
             <div class="d-flex align-items-center gap-2 mb-2">
               <i class="bi bi-whatsapp text-success fs-3"></i>
-              <h3 class="h5 fw-bold mb-0 text-success">Confirm Your Order via WhatsApp</h3>
+              <h3 class="h5 fw-bold mb-0 text-success">{% if order.payment_method == 'whatsapp' or store.whatsapp_only_orders %}Send Order Slip via WhatsApp{% else %}Confirm Your Order via WhatsApp{% endif %}</h3>
             </div>
             <p class="small text-secondary mb-0">
-              For instant dispatch, notify our team on WhatsApp. Click the button to send your pre-filled order slip directly to our WhatsApp support desk (<strong>{{ store.support_phone }}</strong>).
+              {% if order.payment_method == 'whatsapp' or store.whatsapp_only_orders %}
+                Your order #{{ order.order_number }} is registered! Click below to send your pre-filled order slip to our WhatsApp support desk (<strong>{{ store.whatsapp_number|default:store.support_phone }}</strong>) so our team can immediately process and dispatch it.
+              {% else %}
+                For instant dispatch, notify our team on WhatsApp. Click the button to send your pre-filled order slip directly to our WhatsApp support desk (<strong>{{ store.whatsapp_number|default:store.support_phone }}</strong>).
+              {% endif %}
             </p>
           </div>
-          <div class="col-md-4 text-md-end">
-            <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg w-100 fw-bold shadow">
-              <i class="bi bi-whatsapp"></i> Send on WhatsApp
+          <div class="col-md-5 text-md-end">
+            <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" id="send-wa-order-btn" class="btn btn-whatsapp btn-lg w-100 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 py-3">
+              <i class="bi bi-whatsapp fs-4"></i> Send Order on WhatsApp
             </a>
           </div>
         </div>
@@ -132,6 +136,16 @@
             <tr>
               <td>
                 <div class="fw-bold text-dark">{{ item.product_name }}</div>
+                {% if item.selected_size or item.selected_color %}
+                <div class="d-flex align-items-center gap-1 mt-1">
+                  {% if item.selected_size %}
+                    <span class="badge bg-light text-dark border" style="font-size:0.7rem;">Size: {{ item.selected_size }}</span>
+                  {% endif %}
+                  {% if item.selected_color %}
+                    <span class="badge bg-light text-dark border" style="font-size:0.7rem;">Color: {{ item.selected_color }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
                 {% if item.product_sku %}
                 <div class="small text-muted">SKU: {{ item.product_sku }}</div>
                 {% endif %}
